@@ -88,16 +88,22 @@ def main():
         f.write(ic_launcher_xml)
     print(f'  mipmap-anydpi-v26/ic_launcher.xml')
 
-    # Overwrite Capacitor's default background color with our app color
-    bg_file = os.path.join(ANDROID_BASE, 'values', 'ic_launcher_background.xml')
-    if os.path.exists(bg_file):
-        bg_xml = '''<?xml version="1.0" encoding="utf-8"?>
+    # Also create round variant for launchers that prefer it
+    with open(os.path.join(anydpi_dir, 'ic_launcher_round.xml'), 'w') as f:
+        f.write(ic_launcher_xml)
+    print(f'  mipmap-anydpi-v26/ic_launcher_round.xml')
+
+    # Always create/overwrite background color (even if Capacitor didn't create it)
+    values_dir = os.path.join(ANDROID_BASE, 'values')
+    os.makedirs(values_dir, exist_ok=True)
+    bg_file = os.path.join(values_dir, 'ic_launcher_background.xml')
+    bg_xml = '''<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#8B1A1A</color>
 </resources>'''
-        with open(bg_file, 'w') as f:
-            f.write(bg_xml)
-        print(f'  values/ic_launcher_background.xml (updated to #8B1A1A)')
+    with open(bg_file, 'w') as f:
+        f.write(bg_xml)
+    print(f'  values/ic_launcher_background.xml (#8B1A1A)')
 
     print('\nAll Android icon sizes generated successfully!')
 

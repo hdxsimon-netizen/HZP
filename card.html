@@ -1377,7 +1377,18 @@ function showResult(idx,wq){
 function openLink(){
   var btn=E('resultLinkBtn');
   var url=btn.dataset.url;
-  if(url) window.open(url,'_blank');
+  if(!url) return;
+  // 优先使用 Capacitor Browser 插件（原生 App 中用系统浏览器打开）
+  try{
+    if(typeof Capacitor!=='undefined'&&Capacitor.Plugins&&Capacitor.Plugins.Browser){
+      Capacitor.Plugins.Browser.open({url:url});
+      return;
+    }
+  }catch(e){}
+  // Fallback: PWA / 浏览器环境 —— 用 <a> 点击比 window.open 更可靠
+  var a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
 /* ========== 绑定事件 ========== */
