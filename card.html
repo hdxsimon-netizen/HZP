@@ -667,6 +667,8 @@ body::before{
 <div id="particleBox"></div>
 <div id="modeToast"></div>
 
+<!-- Capacitor Browser plugin: opens URLs in device's default browser -->
+<script src="browser-plugin.js"></script>
 <script>
 (function(){
 /* ========== 语录数据 ========== */
@@ -1378,8 +1380,17 @@ function openLink(){
   var btn=E('resultLinkBtn');
   var url=btn.dataset.url;
   if(!url) return;
-  // _system 让 Capacitor WebView 用系统浏览器打开（无需额外插件）
-  window.open(url,'_system');
+  // Capacitor Browser 插件 — 用设备默认浏览器打开链接
+  try{
+    if(typeof Capacitor!=='undefined'&&Capacitor.Plugins&&Capacitor.Plugins.Browser){
+      Capacitor.Plugins.Browser.open({url:url});
+      return;
+    }
+  }catch(e){}
+  // PWA / 浏览器回退
+  var a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
 /* ========== 绑定事件 ========== */

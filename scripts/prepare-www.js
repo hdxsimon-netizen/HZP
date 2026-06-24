@@ -21,6 +21,15 @@ const files = [
   'icon-512.png'
 ];
 
+// Also copy Capacitor Browser plugin JS for native URL opening
+const browserPlugin = src + '/node_modules/@capacitor/browser/dist/plugin.js';
+if (fs.existsSync(browserPlugin)) {
+  fs.copyFileSync(browserPlugin, dst + '/browser-plugin.js');
+  console.log('Copied: browser-plugin.js (@capacitor/browser)');
+} else {
+  console.log('Warning: @capacitor/browser plugin.js not found');
+}
+
 files.forEach(function(f) {
   var from = src + '/' + f;
   var to = dst + '/' + f;
