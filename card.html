@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>遇事不决 · 读毛选</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111118">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="读毛选">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+/* ============================================================
+   CSS 变量 — 默认：深色+阅读模式
+   ============================================================ */
+:root{
+  --bg:radial-gradient(ellipse at 50% 55%,#1A1A22 0%,#111118 40%,#0A0A10 100%);
+  --bg-flat:#111118;
+  --text:#E2D4B8;
+  --text-dim:#A89878;
+  --text-bright:#F5ECD7;
+  --accent:#D4A840;
+  --accent-glow:rgba(212,168,64,.4);
+  --accent-dim:rgba(212,168,64,.25);
+  --card-bg:linear-gradient(160deg,#15151D 0%,#1C1820 50%,#111019 100%);
+  --card-bg-flat:#15151D;
+  --card-border:#D4A840;
+  --card-border-dim:rgba(212,168,64,.2);
+  --card-text:#E2D4B8;
+  --card-shadow:0 12px 50px rgba(0,0,0,.7);
+  --action-bg:rgba(212,168,64,.06);
+  --action-border:rgba(212,168,64,.14);
+  --btn-bg:rgba(212,168,64,.05);
+  --btn-text:#D4A840;
+  --btn-border:rgba(212,168,64,.45);
+  --btn-hover:rgba(212,168,64,.14);
+  --divider:linear-gradient(90deg,transparent,rgba(212,168,64,.45),transparent);
+  --star-color:#C9A227;
+  --star-opacity:.25;
+  --deck-bg:linear-gradient(145deg,#6B0000 0%,#8B0000 40%,#A01010 100%);
+  --deck-symbol:#DAA520;
+  --deck-border:#DAA520;
+  --overlay-bg:rgba(0,0,0,.5);
+  --panel-bg:rgba(20,18,25,.97);
+  --panel-text:#E2D4B8;
+  --panel-border:rgba(212,168,64,.2);
+  --toggle-bg:rgba(255,255,255,.08);
+  --toggle-active:rgba(212,168,64,.2);
+  --font-size:16px;
+  --line-height:2.4;
+  --transition-speed:.4s;
+  /* 统一卡牌尺寸 */
+  --card-w:min(88vw,360px);
+  --card-h:min(110vw,480px);
+}
+
+/* ===== 重置 ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+html{
+  font-size:16px;
+  width:100%;height:100%;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-text-size-adjust:100%;
+}
+body{
+  width:100%;height:100%;overflow:hidden;
+  background:var(--bg);
+  font-family:'STKaiti','KaiTi','楷体','Noto Serif SC',serif;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  transition:background .5s ease;
+  /* 内容主容器居中，平板端限宽 */
+}
+body::before{
+  content:'';position:fixed;top:0;left:50%;
+  width:min(100vw,440px);height:100%;
+  transform:translateX(-50%);
+  pointer-events:none;z-index:-1;
+}
+
+/* ===== 星空 ===== */
+#starsBox{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+
+/* ===== 标题栏 ===== */
+#titleBar{
+  position:absolute;top:max(1rem,env(safe-area-inset-top,12px));left:0;width:100%;text-align:center;
+  z-index:20;pointer-events:none;
+}
+#titleBar h1{
+  font-size:clamp(.85rem,3.6vw,1rem);color:var(--accent);letter-spacing:.35em;font-weight:900;
+  text-shadow:0 0 18px var(--accent-glow),0 0 36px var(--accent-dim);
+  line-height:1.7;margin:0;
+  transition:color .4s ease;
+}
+#titleBar h1::after{
+  content:'';display:block;margin:.3rem auto 0;
+  width:clamp(3rem,14vw,4.5rem);height:1px;
+  background:var(--divider);
+  transition:background .4s ease;
+}
+
+/* ===== 设置按钮 ===== */
+#settingsBtn{
+  position:absolute;top:max(.8rem,env(safe-area-inset-top,10px));right:max(.7rem,env(safe-area-inset-right,10px));z-index:40;
+  width:2.2rem;height:2.2rem;border-radius:50%;
+  background:var(--btn-bg);border:1px solid var(--btn-border);
+  color:var(--accent);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s ease;line-height:1;
+}
+#settingsBtn:hover{background:var(--btn-hover)}
+#settingsBtn:active{transform:scale(.92)}
+
+/* ===== PWA 安装提示 ===== */
+#installBanner{
+  position:fixed;bottom:max(1rem,env(safe-area-inset-bottom,10px));
+  left:50%;transform:translateX(-50%);
+  z-index:200;display:none;
+  background:var(--panel-bg);border:1px solid var(--accent);
+  border-radius:12px;padding:.85rem 1.1rem;
+  color:var(--text);font-size:.85rem;
+  align-items:center;gap:.7rem;
+  max-width:min(90vw,380px);
+  box-shadow:0 4px 24px rgba(0,0,0,.5);
+}
+#installBanner.show{display:flex}
+#installBanner span{flex:1;line-height:1.4}
+#installBtn{
+  background:var(--accent);color:#111118;border:none;
+  border-radius:8px;padding:.45rem 1rem;font-size:.8rem;
+  font-weight:bold;cursor:pointer;white-space:nowrap;
+  font-family:inherit;
+}
+#installDismiss{
+  background:none;border:none;color:var(--text-dim);
+  font-size:1.2rem;cursor:pointer;padding:0 .2rem;
+  line-height:1;
+}
+
+/* ===== 牌堆 ===== */
+#deckArea{
+  position:relative;cursor:pointer;
+  width:var(--card-w);
+  height:var(--card-h);
+  max-width:360px;max-height:480px;
+  z-index:10;
+}
+.deck-card{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:var(--deck-bg);
+  border:2px solid var(--deck-border);
+  border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,.5),inset 0 0 30px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,200,0,.1);
+  display:flex;align-items:center;justify-content:center;
+  cursor:default;
+  transition:transform .5s ease,opacity .5s ease;
+}
+.deck-card::before{
+  content:'';position:absolute;inset:5px;
+  border:1px solid rgba(218,165,32,.2);
+  border-radius:8px;pointer-events:none;
+}
+.deck-card::after{
+  content:'';position:absolute;inset:0;border-radius:12px;pointer-events:none;
+  background:
+    linear-gradient(135deg,rgba(218,165,32,.3) 0%,transparent 28%) top left/18px 18px no-repeat,
+    linear-gradient(225deg,rgba(218,165,32,.3) 0%,transparent 28%) top right/18px 18px no-repeat,
+    linear-gradient(45deg,rgba(218,165,32,.3) 0%,transparent 28%) bottom left/18px 18px no-repeat,
+    linear-gradient(315deg,rgba(218,165,32,.3) 0%,transparent 28%) bottom right/18px 18px no-repeat;
+}
+.deck-card .card-symbol{
+  font-size:clamp(2rem,12vw,3rem);color:var(--deck-symbol);opacity:.8;
+  font-family:'STKaiti','KaiTi','楷体',serif;
+  text-shadow:0 0 10px rgba(218,165,32,.35);z-index:1;
+}
+#topCard{z-index:20;cursor:pointer;transition:transform .6s cubic-bezier(.22,1,.2,1),opacity .3s ease}
+#topCard .card-symbol{font-size:clamp(2.5rem,14vw,3.5rem);opacity:1}
+#topCard::after{
+  content:'';position:absolute;inset:-3px;border-radius:14px;
+  background:transparent;border:1px solid rgba(218,165,32,.25);
+  animation:glowPulse 2s ease-in-out infinite;
+}
+@keyframes glowPulse{
+  0%,100%{box-shadow:0 0 6px rgba(218,165,32,.15);border-color:rgba(218,165,32,.15)}
+  50%{box-shadow:0 0 18px rgba(218,165,32,.4);border-color:rgba(218,165,32,.5)}
+}
+
+/* ===== 牌背图片模式 ===== */
+.deck-card[data-back="yushi"]{
+  background-image:url('back-yushi.png') !important;
+  background-size:cover !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  border-color:var(--card-border-dim) !important;
+  box-shadow:none !important;
+  overflow:hidden;
+}
+.deck-card[data-back="weimin"]{
+  background-image:url('back-weimin.png') !important;
+  background-size:cover !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  border-color:var(--card-border-dim) !important;
+  box-shadow:none !important;
+  overflow:hidden;
+}
+.deck-card[data-back="yushi"] .card-symbol,
+.deck-card[data-back="weimin"] .card-symbol{
+  display:none;
+}
+
+.fly-front[data-back="yushi"]{
+  background-image:url('back-yushi.png') !important;
+  background-size:cover !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  border-color:var(--card-border-dim) !important;
+  box-shadow:none !important;overflow:hidden;
+}
+.fly-front[data-back="weimin"]{
+  background-image:url('back-weimin.png') !important;
+  background-size:cover !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  border-color:var(--card-border-dim) !important;
+  box-shadow:none !important;overflow:hidden;
+}
+
+/* ===== 抽牌按钮 ===== */
+/* ===== 飞牌 ===== */
+#flyCard{
+  display:none;position:fixed;z-index:100;
+  left:50%;top:50%;
+  width:var(--card-w);height:var(--card-h);
+  transform:translate(-50%,-50%);
+  perspective:1200px;
+  transition:opacity .3s ease,border-radius .4s ease;
+}
+#flyInner{
+  width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.42,0,.58,1);
+  border-radius:inherit;
+}
+.fly-front{
+  position:absolute;inset:0;backface-visibility:hidden;
+  background:var(--deck-bg);
+  border:2px solid var(--deck-border);border-radius:inherit;
+  box-shadow:inset 0 0 30px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,200,0,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;color:var(--deck-symbol);
+  font-family:'STKaiti','KaiTi','楷体',serif;
+  text-shadow:0 0 10px rgba(218,165,32,.35);z-index:1;
+}
+.fly-front::before{
+  content:'';position:absolute;inset:5px;
+  border:1px solid rgba(218,165,32,.2);
+  border-radius:inherit;pointer-events:none;
+}
+.fly-front::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:
+    linear-gradient(135deg,rgba(218,165,32,.3) 0%,transparent 28%) top left/18px 18px no-repeat,
+    linear-gradient(225deg,rgba(218,165,32,.3) 0%,transparent 28%) top right/18px 18px no-repeat,
+    linear-gradient(45deg,rgba(218,165,32,.3) 0%,transparent 28%) bottom left/18px 18px no-repeat,
+    linear-gradient(315deg,rgba(218,165,32,.3) 0%,transparent 28%) bottom right/18px 18px no-repeat;
+}
+.fly-back{
+  position:absolute;inset:0;backface-visibility:hidden;
+  background:var(--card-bg);
+  border:2px solid var(--card-border);border-radius:inherit;
+  transform:rotateY(180deg);
+  display:flex;flex-direction:column;padding:1rem .85rem;
+  overflow-y:auto;color:var(--card-text);
+  transition:background .4s ease;
+}
+
+/* ===== 结果卡 ===== */
+#resultCard{
+  display:none;position:fixed;z-index:100;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:var(--card-w);
+  height:var(--card-h);
+  background:var(--card-bg);
+  border:1.5px solid var(--card-border);border-radius:.9rem;
+  box-shadow:var(--card-shadow),0 0 35px var(--accent-dim),inset 0 1px 0 rgba(255,200,0,.06);
+  padding:.9rem .8rem .7rem;overflow-y:auto;
+  animation:resultIn .5s ease;
+  transition:background .4s ease,border-color .4s ease,box-shadow .4s ease;
+}
+#resultCard::before{
+  content:'';position:absolute;inset:5px;border-radius:10px;pointer-events:none;
+  border:1px solid var(--card-border-dim);
+}
+@keyframes resultIn{
+  from{opacity:0;transform:translate(-50%,-50%) scale(.82)}
+  to{opacity:1;transform:translate(-50%,-50%) scale(1)}
+}
+#resultCard.show{display:flex;flex-direction:column;box-sizing:border-box}
+
+/* ===== 结果卡内容 ===== */
+#resultText{
+  font-size:var(--font-size,1rem);color:var(--card-text);text-align:center;
+  margin-bottom:.6rem;padding:0 .15em;
+  text-shadow:0 1px 3px rgba(0,0,0,.4);
+  transition:color .4s ease,font-size .3s ease;
+}
+.quote-line{
+  line-height:var(--line-height,2.4);letter-spacing:.1em;
+  transition:line-height .3s ease;
+}
+#divider{height:1px;background:var(--divider);margin:0 .3rem .6rem;transition:background .4s ease}
+
+.section-label{
+  display:block;font-size:.65rem;color:var(--accent);letter-spacing:.35em;
+  text-align:center;margin-bottom:.4rem;opacity:.7;
+  text-shadow:0 0 6px var(--accent-dim);
+  transition:color .4s ease;
+}
+#resultSrcText{
+  font-size:.75rem;color:var(--text-dim);text-align:center;margin-bottom:.7rem;
+  line-height:1.6;transition:color .4s ease;
+}
+#resultAction{
+  font-size:.8rem;color:var(--text-dim);line-height:1.9;text-align:left;
+  white-space:pre-line;
+  padding:.55rem .7rem;background:var(--action-bg);
+  border-radius:.5rem;border:1px solid var(--action-border);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.15);
+  max-height:30vh;overflow-y:auto;
+  transition:all .4s ease;
+}
+.btn-row{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:auto;padding-top:.5rem}
+.action-btn{
+  padding:.5rem 1.2rem;border-radius:1.4rem;
+  border:1px solid var(--btn-border);background:transparent;
+  color:var(--btn-text);font-size:.8rem;cursor:pointer;
+  font-family:'STKaiti','KaiTi','楷体',serif;letter-spacing:.15em;
+  transition:all .3s ease;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.action-btn:hover{
+  background:var(--btn-hover);border-color:var(--accent);
+  box-shadow:0 0 14px var(--accent-dim);transform:scale(1.03);
+}
+.action-btn:active{
+  background:rgba(212,168,64,.22);transform:scale(.94);
+  transition:all .08s ease;
+}
+
+/* ===== 粒子 ===== */
+#particleBox{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:90}
+.pp{position:absolute;border-radius:50%;animation:spread 1.5s ease-out forwards}
+@keyframes spread{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--px),var(--py)) scale(0);opacity:0}
+}
+
+/* ============================================================
+   设置面板
+   ============================================================ */
+#settingsOverlay{
+  position:fixed;inset:0;z-index:200;
+  background:var(--overlay-bg);opacity:0;pointer-events:none;
+  transition:opacity .35s ease;
+}
+#settingsOverlay.show{opacity:1;pointer-events:auto}
+
+#settingsPanel{
+  position:fixed;left:0;right:0;bottom:0;z-index:210;
+  background:var(--panel-bg);
+  border-radius:1.2rem 1.2rem 0 0;
+  padding:0 max(1rem,env(safe-area-inset-left,16px)) max(1.5rem,env(safe-area-inset-bottom,16px)) max(1rem,env(safe-area-inset-right,16px));
+  box-shadow:0 -8px 40px rgba(0,0,0,.5);
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(.22,1,.2,1),background .4s ease;
+  max-height:88vh;overflow-y:auto;
+}
+#settingsPanel.show{transform:translateY(0)}
+
+.panel-handle{
+  width:2rem;height:4px;background:var(--panel-border);
+  border-radius:2px;margin:.75rem auto 1.2rem;
+}
+.panel-title{
+  text-align:center;font-size:.95rem;color:var(--panel-text);
+  letter-spacing:.25em;margin-bottom:1.2rem;
+  font-weight:700;
+}
+.panel-section{margin-bottom:1.2rem}
+.panel-label{
+  font-size:.75rem;color:var(--text-dim);letter-spacing:.15em;margin-bottom:.6rem;
+  display:block;transition:color .4s ease;
+}
+
+/* 主题切换（浅色/深色） */
+.theme-toggle{
+  display:flex;background:var(--toggle-bg);border-radius:1.4rem;
+  padding:3px;transition:background .4s ease;
+}
+.theme-opt{
+  flex:1;text-align:center;padding:.5rem 0;border-radius:1.2rem;
+  font-size:.8rem;cursor:pointer;color:var(--text-dim);
+  transition:all .3s ease;font-family:inherit;border:none;background:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.theme-opt.active{
+  background:var(--toggle-active);color:var(--accent);
+  font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+/* 模式切换（护眼/阅读/强光） */
+.mode-row{
+  display:flex;gap:.5rem;
+}
+.mode-opt{
+  flex:1;text-align:center;padding:.6rem .25rem;border-radius:.75rem;
+  font-size:.75rem;cursor:pointer;color:var(--text-dim);
+  border:1px solid var(--panel-border);
+  background:var(--btn-bg);
+  transition:all .3s ease;font-family:inherit;
+  letter-spacing:.05em;
+  -webkit-tap-highlight-color:transparent;
+}
+.mode-opt.active{
+  background:var(--toggle-active);border-color:var(--accent);
+  color:var(--accent);font-weight:700;
+}
+.mode-icon{display:block;font-size:1.25rem;margin-bottom:.25rem}
+
+/* 字号调节 */
+.size-control{
+  display:flex;align-items:center;justify-content:center;gap:.85rem;
+}
+.size-btn{
+  width:2rem;height:2rem;border-radius:50%;
+  border:1px solid var(--panel-border);background:var(--btn-bg);
+  color:var(--accent);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s ease;font-family:inherit;line-height:1;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.size-btn:hover{background:var(--btn-hover)}
+.size-btn:active{transform:scale(.9)}
+.size-val{
+  font-size:.95rem;color:var(--panel-text);min-width:2.5rem;text-align:center;
+  transition:color .4s ease;
+}
+.size-label{
+  font-size:.7rem;color:var(--text-dim);margin-left:.25rem;transition:color .4s ease;
+}
+
+/* 行距调节 */
+.spacing-control{
+  display:flex;align-items:center;justify-content:center;gap:14px;
+}
+
+/* 面板底部 */
+.panel-footer{
+  text-align:center;margin-top:1.2rem;
+}
+.panel-close{
+  padding:.6rem 2.2rem;border-radius:1.4rem;
+  border:1px solid var(--btn-border);background:var(--btn-bg);
+  color:var(--btn-text);font-size:.85rem;cursor:pointer;
+  font-family:inherit;letter-spacing:.2em;
+  transition:all .3s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.panel-close:hover{background:var(--btn-hover)}
+.panel-close:active{transform:scale(.94);transition:all .08s ease}
+
+/* ===== 模式切换反馈提示 ===== */
+#modeToast{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);
+  z-index:300;pointer-events:none;
+  background:var(--panel-bg);color:var(--accent);
+  padding:.5rem 1.2rem;border-radius:1.2rem;
+  font-size:.8rem;letter-spacing:.1em;
+  opacity:0;transition:all .3s ease;
+  border:1px solid var(--accent);
+  white-space:nowrap;
+}
+#modeToast.show{
+  opacity:1;transform:translate(-50%,-50%) scale(1);
+}
+
+/* ============================================================
+   响应式断点
+   ============================================================ */
+
+/* 手机横屏 (480px~768px) — 统一卡牌尺寸变量 */
+@media(min-width:480px) and (max-width:767px){
+  html{font-size:17px}
+  :root{
+    --card-w:min(75vw,360px);
+    --card-h:min(105vw,500px);
+  }
+}
+
+/* 平板 (768px+) — 限宽居中，统一卡牌尺寸变量 */
+@media(min-width:768px){
+  html{font-size:18px}
+  :root{
+    --card-w:min(60vw,420px);
+    --card-h:min(95vw,520px);
+  }
+  body::before{width:min(100vw,520px)}
+  .deck-card .card-symbol{font-size:3rem}
+  #topCard .card-symbol{font-size:3.5rem}
+  #resultCard{
+    border-radius:1rem;
+    padding:1.5rem 1.2rem 1.2rem;
+  }
+  #settingsPanel{
+    max-width:440px;
+    left:50%;
+    transform:translate(-50%,100%);
+    border-radius:1.4rem 1.4rem 0 0;
+  }
+  #settingsPanel.show{
+    transform:translate(-50%,0);
+  }
+  #settingsBtn{
+    width:2.5rem;height:2.5rem;font-size:1.2rem;
+    top:max(1rem,env(safe-area-inset-top,12px));
+    right:max(1rem,env(safe-area-inset-right,12px));
+  }
+  #flyCard{
+    /* 飞牌最终尺寸跟随 resultCard */
+  }
+}
+
+/* 大屏平板/桌面 (1024px+) — 更宽松的留白 */
+@media(min-width:1024px){
+  html{font-size:20px}
+  :root{--card-w:min(50vw,480px)}
+  body::before{width:min(100vw,560px)}
+  #settingsPanel{max-width:480px}
+}
+
+/* 深色模式下滚动条 */
+@media(prefers-color-scheme:dark){
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(212,168,64,.2);border-radius:2px}
+}
+</style>
+</head>
+<body>
+
+<div id="installBanner"><span>将「读毛选」添加到主屏幕，随时获取智慧指引</span><button id="installBtn">安装</button><button id="installDismiss">×</button></div>
+
+<div id="starsBox"></div>
+
+<div id="titleBar">
+  <h1>遇事不决 · 读毛选</h1>
+</div>
+
+<button id="settingsBtn" title="阅读设置">⚙</button>
+
+<div id="deckArea">
+  <div class="deck-card" style="transform:rotate(-4deg) translateY(14px);z-index:1;opacity:.55"></div>
+  <div class="deck-card" style="transform:rotate(3deg) translateY(11px);z-index:2;opacity:.62"></div>
+  <div class="deck-card" style="transform:rotate(-2deg) translateY(8px);z-index:3;opacity:.69"></div>
+  <div class="deck-card" style="transform:rotate(1deg) translateY(5px);z-index:4;opacity:.76"><span class="card-symbol">☭</span></div>
+  <div class="deck-card" style="transform:rotate(-1deg) translateY(2px);z-index:5;opacity:.84"><span class="card-symbol">☭</span></div>
+  <div class="deck-card" style="transform:rotate(2deg) translateY(0);z-index:6;opacity:.92"><span class="card-symbol">☭</span></div>
+  <div id="topCard" class="deck-card" style="transform:none;z-index:7;opacity:1">
+    <span class="card-symbol">☭</span>
+  </div>
+</div>
+
+<div id="flyCard">
+  <div id="flyInner">
+    <div class="fly-front" id="flyFront">
+      ☭
+    </div>
+    <div class="fly-back" id="flyBackContent"></div>
+  </div>
+</div>
+
+<div id="resultCard">
+  <div id="resultText"></div>
+  <div id="divider"></div>
+  <span class="section-label">出 处</span>
+  <div id="resultSrcText"></div>
+  <span class="section-label">行 动 指 南</span>
+  <div id="resultAction"></div>
+  <div class="btn-row">
+    <button class="action-btn" id="resultLinkBtn" onclick="openLink()">读原文</button>
+    <button class="action-btn" id="drawAgainBtn">抽卡牌</button>
+  </div>
+</div>
+
+<!-- 设置遮罩 -->
+<div id="settingsOverlay"></div>
+
+<!-- 设置面板 -->
+<div id="settingsPanel">
+  <div class="panel-handle"></div>
+  <div class="panel-title">阅读设置</div>
+
+  <div class="panel-section">
+    <span class="panel-label">主题</span>
+    <div class="theme-toggle" id="themeToggle">
+      <button class="theme-opt active" data-theme="light">浅色</button>
+      <button class="theme-opt" data-theme="dark">深色</button>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <span class="panel-label">色彩模式</span>
+    <div class="mode-row" id="modeRow">
+      <button class="mode-opt" data-mode="eye">
+        <span class="mode-icon">🌿</span>护眼
+      </button>
+      <button class="mode-opt active" data-mode="reading">
+        <span class="mode-icon">📖</span>阅读
+      </button>
+      <button class="mode-opt" data-mode="bright">
+        <span class="mode-icon">☀️</span>强光
+      </button>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <span class="panel-label">字号</span>
+    <div class="size-control" id="sizeControl">
+      <button class="size-btn" data-action="down">−</button>
+      <span class="size-val" id="sizeVal">16</span><span class="size-label">px</span>
+      <button class="size-btn" data-action="up">+</button>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <span class="panel-label">行距</span>
+    <div class="spacing-control" id="spacingControl">
+      <button class="size-btn" data-action="down">−</button>
+      <span class="size-val" id="spacingVal">2.4</span><span class="size-label">倍</span>
+      <button class="size-btn" data-action="up">+</button>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <span class="panel-label">牌背样式</span>
+    <div class="mode-row" id="backRow">
+      <button class="mode-opt active" data-back="classic">
+        <span class="mode-icon">☭</span>经典红
+      </button>
+      <button class="mode-opt" data-back="yushi">
+        <span class="mode-icon">📜</span>遇事不决
+      </button>
+      <button class="mode-opt" data-back="weimin">
+        <span class="mode-icon">⭐</span>为人民服务
+      </button>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <button class="panel-close" id="panelClose">完 成</button>
+  </div>
+</div>
+
+<div id="particleBox"></div>
+<div id="modeToast"></div>
+
+<script>
+(function(){
+/* ========== 语录数据 ========== */
+var Q=[
+['没有调查，没有发言权。','《反对本本主义》（1930年）','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 对不了解的话题先说"我需要调查一下"\n② 建立判断标准：没事实不放话\n③ 培养"先收集后表达"的习惯'],
+['调查就像"十月怀胎"，解决问题就像"一朝分娩"。调查就是解决问题。','《反对本本主义》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 把调查当作工作的一部分——占60%，决策只占40%\n② 每次调查带一个明确问题："我到底要搞清楚什么？"\n③ 调查结束立刻写结论不超过3句话'],
+['你对于某个问题没有调查，就停止你对于某个问题的发言权。','《反对本本主义》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 遇到问题先别急着表态——列出"已知"和"未知"两张清单\n② 去一线看、问、记，至少找3个不同立场的人聊\n③ 没有实地数据支撑的决策一律标注"待验证"'],
+['迈开你的两脚，到你的工作范围的各部分各地方去走走，学个孔夫子的"每事问"。','《反对本本主义》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 本周选一个不熟悉的领域或部门去现场走一圈\n② 准备3个好问题并记录所有回答\n③ 回家整理成笔记'],
+['一切结论产生于调查情况的末尾，而不是在它的先头。','《反对本本主义》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 做决定前强迫自己写出3条事实依据\n② 写不出依据→需要更多信息→暂停决策\n③ 把"先入为主"的想法列出来逐一用事实检验'],
+['盲目地表面上完全无异议地执行上级的指示，这不是真正在执行上级的指示。','《反对本本主义》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 接到任务先花10分钟想：实际情况是什么？有什么特殊情况？\n② 发现问题时带着方案沟通\n③ 真正的执行力=理解意图+结合实际+反馈偏差'],
+['群众是真正的英雄，而我们自己则往往是幼稚可笑的。','《〈农村调查〉序言》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 遇到难题问问身边同事/用户的真实看法\n② 建立"智囊团"：定期向3-5个不同背景人请教\n③ 承认自己的无知是智慧的开端'],
+['要了解情况，唯一的方法是向社会作调查。','《〈农村调查〉序言》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 不要只看报告和数据，去看真实场景\n② 观察人们的真实行为而不只是听他们说\n③ 做一个"人类学家"记录所有细节'],
+['凡是忧愁没有办法的时候，就去调查研究。','《反对本本主义》（1930年）','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 迷茫焦虑时立刻停止空想\n② 列出调研清单：谁能给我答案？什么数据能帮判断？\n③ 立即出发调研——答案在路上'],
+['详细地占有材料，抓住要点。材料是要搜集得愈多愈好，但一定要抓住要点或特点。','《反对本本主义》（1930年）','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 收集信息时不设限，越多越好\n② 整理时画出重点——80%的信息没用\n③ 抓住核心矛盾就是抓住要害'],
+['你要知道梨子的滋味，你就得亲口吃一吃。','《实践论》（1937年）','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 不要在岸上学游泳——下水！哪怕姿势很难看\n② 想学新技能第一天就要动手做\n③ 最小可行动作是什么？现在就去完成它'],
+['只有人们的社会实践，才是人们对于外界认识的真理性的标准。','《实践论》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 理论再完美，没被验证过的都只是假说\n② 做A/B测试、小范围试点、MVP让结果说话\n③ "我觉得"不重要，"数据证明"才重要'],
+['实践、认识、再实践、再认识，这种形式，循环往复以至无穷。','《实践论》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 把每一次失败看作"认知升级"的机会\n② 建立PDCA循环：计划→执行→检查→改进\n③ 今天比昨天多懂一点就是进步'],
+['感觉到了的东西，我们不能立刻理解它，只有理解了的东西才更深刻地感觉它。','《实践论》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 经历了一件事后花时间反思总结\n② 把经验提炼成方法论\n③ 从"凭感觉"进化到"凭系统"'],
+['读书是学习，使用也是学习，而且是更重要的学习。','《中国革命战争的战略问题》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 不要等学完再动手——边干边学效率最高\n② 做完项目后总结3个改进点\n③ 找一个比你强的人在实战中观察他怎么处理问题'],
+['通过实践而发现真理，又通过实践而证实真理和发展真理。','《实践论》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 有想法→小规模试错→根据反馈调整→扩大规模\n② 不要害怕犯错，错误是最快的学习方式\n③ 保持"实验心态"：一切都是测试'],
+['如果有了正确的理论，只是把它空谈一阵，束之高阁，并不实行，那么，这种理论再好也是没有意义的。','《实践论》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 学到一个好方法当天就要用一次\n② 读完书/听完课，列3条要立即改的事\n③ 知道但不去做=不知道'],
+['认识从实践始，经过实践得到了理论的认识，还须再回到实践去。','《实践论》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 总结规律→立即再实践验证\n② 每一次行动后做一分钟复盘\n③ 把经验提炼成标准操作流程（SOP）'],
+['客观现实世界的变化运动永远没有完结，人们在实践中对于真理的认识也就永远没有完结。','《实践论》','第一卷','实践论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_9.htm','① 永远保持学习心态，世界在变\n② 昨天的成功经验今天可能失效\n③ 定期审视自己的认知是否已过时'],
+['捉住了主要矛盾，一切问题就迎刃而解了。','《矛盾论》（1937年）','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 面对一堆问题先全部列出来\n② 如果只能解决一个选哪个？（主要矛盾）\n③ 集中全部精力解决这一个，其他会随之缓解'],
+['外因是变化的条件，内因是变化的根据，外因通过内因而起作用。','《矛盾论》','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 怪环境/怪别人/怪运气——这些都解决不了问题\n② 回到自身：我能做什么？我能改变什么？\n③ 外部条件再差总有人做出成绩——研究他们怎么做'],
+['不同质的矛盾，只有用不同质的方法才能解决。','《矛盾论》','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 不要一把钥匙开所有锁\n② 分类思维：先判断问题类型再用对应方法\n③ 老方法不管用了？可能遇到了新类型的问题'],
+['事物发展的根本原因，不是在事物的外部而是在事物的内部，在于事物内部的矛盾性。','《矛盾论》','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 寻找问题的根本原因而不是表面原因\n② 问5个"为什么"深挖到内因\n③ 内因改变了，外因会自动调整'],
+['没有什么事物是不包含矛盾的，没有矛盾就没有世界。','《矛盾论》','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 出现矛盾是正常的，没有矛盾才奇怪\n② 把矛盾看作推动进步的动力\n③ 建设性地处理矛盾，不要回避'],
+['研究任何过程，如果是存在着两个以上矛盾的复杂过程的话，就要用全力找出它的主要矛盾。','《矛盾论》','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 面对多线任务时问：哪个事不做其他都白做？\n② 聚焦那个事\n③ 复杂局面中识别关键杠杆点'],
+['对于具体的事物作具体的分析。','《矛盾论》','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 不要用一个模板套所有情况\n② 每次决策前问：这个情况有什么特殊的？\n③ 精准分析比勤奋执行更重要'],
+['研究问题，忌带主观性、片面性和表面性。','《矛盾论》','第一卷','矛盾论','https://www.qstheory.cn/books/2019-07/31/c_1119448591_10.htm','① 分析问题至少看三面：正面、反面、侧面\n② 不要只看局部就下结论\n③ 深入一层看本质，不要停留在表面现象'],
+['星星之火，可以燎原。','《星星之火，可以燎原》（1930年）','第一卷','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要因为事情小就不开始——最小的一步也是进步\n② 找到一个能自然扩散的"火种"\n③ 耐心积累，量变终会引发质变'],
+['它（革命高潮）是站在海岸遥望海中已经看得见桅杆尖头了的一只航船，它是立于高山之巅远看东方已见光芒四射喷薄欲出的一轮朝日。','《星星之火，可以燎原》','第一卷','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 当你看不到进展时，相信积累的力量\n② 成功往往在最黑暗时即将到来\n③ 保持信念——黎明前的黑夜最长'],
+['战略上要藐视敌人，战术上要重视敌人。','《在莫斯科共产党和工人党代表会议上的讲话》（1957年）','第五卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 面对大目标：相信最终能做到（战略藐视）\n② 面对每一步：认真准备每一个细节（战术重视）\n③ 心态上自信，行动上谨慎'],
+['敌进我退，敌驻我扰，敌疲我打，敌退我追。','《中国革命战争的战略问题》','第一卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 竞争中避开对手强势领域，攻其弱点\n② 对手休息时你加速\n③ 灵活应变——不同态势用不同策略'],
+['集中优势兵力，各个歼灭敌人。','《目前形势和我们的任务》','第四卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 一次只专注一个目标\n② 把所有资源集中到最重要的那件事上\n③ 不要同时打几场仗，逐个击破'],
+['不打无准备之仗，不打无把握之仗。','《解放战争第二年的战略方针》（1947年）','第四卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 重要会议/谈判前至少30分钟准备\n② 做好充分准备再行动，不要仓促上阵\n③ 把握来自准备，冲动导致失败'],
+['主动权不是任何天才家所固有的，只是聪明的领导人从虚心研究和正确地估计客观情况中获得的。','《论持久战》','第二卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 主动权是研究出来的不是天生的\n② 信息优势=决策优势=主动权\n③ 持续研究市场动态保持主动权'],
+['战争的目的不是别的，就是"保存自己，消灭敌人"。','《论持久战》（1938年）','第二卷','论持久战','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 生存第一，发展第二\n② 先守住地盘再扩张\n③ 不亏就是赚'],
+['中国会亡吗？答复：不会亡，最后胜利是中国的。中国能够速胜吗？答复：不能速胜，抗日战争是持久战。','《论持久战》','第二卷','论持久战','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 目标一定能实现，但需要时间\n② 不要急于求成——耐心是最大的战略\n③ 正确的判断：既不过度悲观也不盲目乐观'],
+['武器是战争的重要因素，但不是决定的因素，决定的因素是人不是物。','《论持久战》','第二卷','论持久战','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要太依赖工具\n② 核心是人的能力和意愿\n③ 拥有最好工具的人不一定赢——最会用的人赢'],
+['自觉的能动性是人类的特点。','《论持久战》','第二卷','主动与自觉','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要被动响应——主动规划\n② 每天优先完成你选择做的事\n③ 自觉=自由，被动=被控制'],
+['领导者的责任，归结起来，主要地是出主意、用干部两件事。','《中国共产党在民族战争中的地位》','第二卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 领导核心工作只有两件：决策+用人\n② 把80%时间花在这两件事上\n③ 其他的事能授权就授权'],
+['必须善于使用干部。','《中国共产党在民族战争中的地位》','第二卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 把合适的人放在合适的位置\n② 用人所长，容人所短\n③ 培养人比招人更重要'],
+['学会"弹钢琴"。弹钢琴要十个指头都动作，不能有的动，有的不动。','《党委会的工作方法》','第四卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 多项任务要有节奏地推进\n② 不能只盯一个方面忽略其他\n③ 全局协调比单点突破更重要'],
+['要把问题摆到桌面上来。','《党委会的工作方法》','第四卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 有问题公开讨论，不要背后议论\n② 把分歧放在桌面上——透明沟通\n③ 隐藏的问题迟早会爆炸'],
+['虚心倾听群众意见，先做学生，再做先生。','《〈农村调查〉序言》（1941年）','第三卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 听取团队意见后再做决策\n② 不要在还不了解情况时就指手画脚\n③ 学习心态是领导力的基础'],
+['一切反动派都是纸老虎。','《和美国记者安娜·路易斯·斯特朗的谈话》','第四卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 看起来可怕的对手未必真的强\n② 分析对手的弱点，你会发现机会\n③ 恐惧往往源于不了解'],
+['我们的同志在困难的时候，要看到成绩，要看到光明，要提高我们的勇气。','《为人民服务》','第三卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 低谷时回忆你过去的成就\n② 困难是暂时的——看远处\n③ 给自己打气：已经走到这里了'],
+['下定决心，不怕牺牲，排除万难，去争取胜利。','《愚公移山》','第三卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 定下目标就不要动摇\n② 付出代价也无所谓\n③ 困难一个一个排除'],
+['当着天空中出现乌云的时候，我们就指出：这不过是暂时的现象，黑暗即将过去，曙光即在前头。','《目前形势和我们的任务》','第四卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 低谷期的正确态度：这是暂时的\n② 不要被一时的困难迷惑\n③ 眼光放远，穿过眼前的雾'],
+['丢掉幻想，准备斗争。','《丢掉幻想，准备斗争》','第四卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要寄希望于奇迹\n② 做最坏的打算，做最好的准备\n③ 现实一点——然后行动'],
+['多少事，从来急；天地转，光阴迫。一万年太久，只争朝夕。','《满江红·和郭沫若同志》（1963年）','诗词集','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 今天能做的事不要拖到明天\n② 时间是唯一不可再生的资源\n③ 紧迫感是行动力的源泉'],
+['革命不是请客吃饭，不是做文章，不是绘画绣花，不能那样雅致，那样从容不迫，文质彬彬，那样温良恭俭让。','《湖南农民运动考察报告》','第一卷','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 真正的行动往往不优雅\n② 不要追求完美的起步\n③ 干就行了——姿势不重要'],
+['实事求是。','《改造我们的学习》（1941年）','第三卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 从事实出发而不是从愿望出发\n② 是什么就是什么，不粉饰\n③ 基于现实做判断'],
+['错误常常是正确的先导。','《论人民民主专政》（1949年）','第四卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 犯错是通向正确的必经之路\n② 不允许犯错的环境只是假装不犯\n③ 从错误中提炼智慧'],
+['学习的敌人是自己的满足，要认真学习一点东西，必须从不自满开始。','《中国共产党在民族战争中的地位》','第二卷','学习与成长','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 以为自己懂了就是学不会的开始\n② 保持空杯心态\n③ 每天找一个你不知道的东西'],
+['情况是在不断地变化，要使自己的思想适应新的情况，就得学习。','《在中国共产党全国宣传工作会议上的讲话》','第五卷','学习与成长','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 世界在变，你的认知必须更新\n② 每季度审视自己的知识体系\n③ 新情况→新学习→新能力'],
+['团结一致，同心同德。','《论联合政府》（1945年）','第三卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 心齐比人齐更重要\n② 统一思想再行动\n③ 内部团结是抵御外部压力的铠甲'],
+['谅解、支援和友谊，比什么都重要。','《论人民民主专政》（1949年）','第四卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 关系比输赢重要\n② 帮同事一把\n③ 建立真诚的友谊'],
+['因为我们是为人民服务的，所以，我们如果有缺点，就不怕别人批评指出。','《为人民服务》','第三卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 接受批评是改进的捷径\n② 如果有人指出你的缺点，感谢他\n③ 不完美不影响你继续前进'],
+['虚心使人进步，骄傲使人落后。','《中国共产党第八次全国代表大会开幕词》（1956年）','第五卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 取得成绩后警惕自满\n② 成功是最大的陷阱\n③ 保持谦逊，持续进步'],
+['务必使同志们继续地保持谦虚、谨慎、不骄、不躁的作风。','《在中国共产党第七届中央委员会第二次全体会议上的报告》','第四卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 顺境中更需保持清醒\n② 不因一时成功而浮躁\n③ 稳扎稳打走得更远'],
+['务必使同志们继续地保持艰苦奋斗的作风。','《在中国共产党第七届中央委员会第二次全体会议上的报告》','第四卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 条件变好了也不要丢掉拼搏精神\n② 舒适是最大的腐蚀剂\n③ 保持危机感'],
+['艰苦的工作就像担子，摆在我们的面前，看我们敢不敢承担。','《关于重庆谈判》','第四卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 挑战来临就是证明自己的机会\n② 迎难而上而非绕道走\n③ 承担困难任务就是加速成长'],
+['自己动手，丰衣足食。','《组织起来》（1943年）','第三卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 依赖别人不如靠自己\n② 亲自做一遍才能真正掌握\n③ 动手能力是最实用的能力'],
+['前途是光明的，道路是曲折的。','《关于重庆谈判》','第四卷','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 方向正确就坚持走下去\n② 路上有坑洼是正常的\n③ 不因曲折而怀疑方向'],
+['中国人民有志气，有能力，一定要在不远的将来，赶上和超过世界先进水平。','《纪念孙中山先生》（1956年）','第五卷','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 相信自己的能力\n② 设定高目标\n③ 不满足于现状，追求卓越'],
+['世界上怕就怕"认真"二字，共产党就最讲"认真"。','《在中国共产党第八次全国代表大会上的讲话》（1956年）','第五卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 认真是核心竞争力\n② 把每件小事做到极致\n③ 不敷衍、不凑合、不差不多'],
+['一切从人民的利益出发，而不是从个人或小集团的利益出发。','《论联合政府》','第三卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 做决策时优先考虑大局\n② 个人利益服从团队利益\n③ 利他最终利己'],
+['人是要有帮助的。荷花虽好，也要绿叶扶持。','《在中国共产党全国代表会议上的讲话》（1955年）','第五卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 再强的人也需要团队\n② 不要一个人扛所有事\n③ 主动寻求帮助是智慧'],
+['什么是工作？工作就是斗争。哪些地方有困难、有问题，需要我们去解决。我们是为着解决困难去工作、去斗争的。','《关于重庆谈判》','第四卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 工作的本质就是解决问题\n② 不要回避困难——迎上去\n③ 解决问题的过程就是成长的过程'],
+['一个人做点好事并不难，难的是一辈子做好事，不做坏事。','《吴玉章寿辰祝词》','第五卷','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 偶尔做好容易，一直做好很难\n② 真正的品格体现在长期行为中\n③ 把善行变成习惯'],
+['我们需要的是热烈而镇定的情绪，紧张而有秩序的工作。','《中国革命战争的战略问题》','第一卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 热忱+冷静是最佳组合\n② 激情投入但头脑清醒\n③ 忙碌但不慌乱'],
+['看问题要从各方面去看，不能只从单方面看。','《关于重庆谈判》','第四卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 做决策前列出所有利益相关方\n② 换位思考——如果你是对手会怎么想？\n③ 多视角=更准确的判断'],
+['统筹兼顾，适当安排。','《关于正确处理人民内部矛盾的问题》','第五卷','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 周全考虑各方利益\n② 合理安排优先级\n③ 平衡短期和长期'],
+['力戒骄傲。这对领导者是一个原则问题，也是保持团结的一个重要条件。','《党委会的工作方法》','第四卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 功劳归于团队，责任自己承担\n② 保持低调——傲慢是团队的毒药\n③ 把光给别人，把事做扎实'],
+['没有满腔的热忱，没有眼睛向下的决心，是一辈子也不会真正懂得的。','《〈农村调查〉序言》','第一卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_7.htm','① 放下身段——去找最基层的一线人员聊\n② 每天至少和一个非直属的人交流\n③ 对新领域保持"小学生心态"多问少说'],
+['不但要团结和自己意见相同的人，而且要善于团结那些和自己意见不同的人。','《党委会的工作方法》（1949年）','第四卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 包容不同声音\n② 反对者可能是你最需要的人\n③ 多样性让团队更强'],
+['保存自己，消灭敌人。','《论持久战》','第二卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 在市场竞争中先确保自己不倒下\n② 活下来才有翻盘的机会\n③ 防守也是进攻的一部分'],
+['动员了全国的老百姓，就造成了陷敌于灭顶之灾的汪洋大海。','《论持久战》','第二卷','论持久战','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 调动每一个人的力量\n② 群众智慧是无穷的\n③ 让每个人都成为解决方案的一部分'],
+['我们看事情必须要看它的实质，而把它的现象只看作入门的向导。','《星星之火，可以燎原》','第一卷','主动与自觉','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要被表面现象迷惑\n② 问三次"真正的意思是什么"\n③ 穿过现象看本质——这是高手的标志'],
+['我们能够学会我们原来不懂的东西。我们不但善于破坏一个旧世界，我们还将善于建设一个新世界。','《在中国共产党第七届中央委员会第二次全体会议上的报告》','第四卷','学习与成长','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要说我不会——说我还没学\n② 人的学习能力远超想象\n③ 从破坏者进化为建设者'],
+['东方不亮西方亮，黑了南方有北方。','《中国革命战争的战略问题》（1936年）','第一卷','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 这条路走不通换一条\n② 永远有备用方案\n③ 不把鸡蛋放一个篮子里'],
+['指导战争的人们不能超越客观条件许可的限度期求战争的胜利，然而可以而且必须在客观条件的限度之内，能动地争取战争的胜利。','《论持久战》','第二卷','主动与自觉','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 条件有限不是不做的理由\n② 在现有条件下做到最好\n③ 不抱怨资源不够——用好已有的'],
+['谁是我们的敌人？谁是我们的朋友？这个问题是革命的首要问题。','《中国社会各阶级的分析》（1925年）','第一卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_3.htm','① 做任何事先分清敌友：谁支持你？谁反对你？谁中立？\n② 列出利益相关方地图\n③ 把精力花在争取中间力量上'],
+['中国过去一切革命斗争成效甚少，其基本原因就是因为不能团结真正的朋友，以攻击真正的敌人。','《中国社会各阶级的分析》（1925年）','第一卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_3.htm','① 失败时先问：我找错了盟友吗？\n② 真正的朋友是利益一致的人\n③ 团结对的人比努力本身更重要'],
+['红军所以艰难奋战而不溃散，"支部建在连上"是一个重要原因。','《井冈山的斗争》（1928年）','第一卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_4.htm','① 组织架构决定战斗力\n② 把核心骨干放在最基层\n③ 基层有人牵头才不会散'],
+['关于主观主义，纠正的方法主要是教育党员用马克思列宁主义的方法去作政治形势的分析和阶级势力的估量。','《关于纠正党内的错误思想》（1929年）','第一卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_5.htm','① 不要拍脑袋决策——用数据和事实\n② 区分"我觉得"和"证据表明"\n③ 定期检查自己的判断方法是否有偏差'],
+['红军第四军的共产党内存在着各种非无产阶级的思想，这对于执行党的正确路线，妨碍极大。','《关于纠正党内的错误思想》（1929年）','第一卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_5.htm','① 思想偏差是行动偏差的根源\n② 定期反思：我的想法是对的吗？\n③ 听取不同意见来校准思想'],
+['一切群众的实际生活问题，都是我们应当注意的问题。','《关心群众生活，注意工作方法》（1934年）','第一卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_8.htm','① 真正关心团队成员的实际困难\n② 解决了人的后顾之忧，战斗力自然提升\n③ 小事做到位，大事就好办'],
+['真正的铜墙铁壁是什么？是群众，是千百万真心实意地拥护革命的群众。','《关心群众生活，注意工作方法》（1934年）','第一卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_8.htm','① 用户/员工的支持是最坚固的壁垒\n② 得人心者得天下\n③ 把服务对象变成同盟军'],
+['我们是战争消灭论者，我们是不要战争的；但是只能经过战争去消灭战争，不要枪杆子必须拿起枪杆子。','《论反对日本帝国主义的策略》（1935年）','第一卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 要消灭问题就得先面对问题\n② 回避冲突不会带来和平\n③ 用对手的方式打败对手'],
+['说战略胜利取决于战术胜利的这种意见是错误的，因为这种意见没有看见战争的胜败的主要和首先的问题，是全局和全过程的规律性问题。','《中国革命战争的战略问题》（1936年）','第一卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要被局部胜利迷惑而忽略全局\n② 战术再漂亮，战略错了也白搭\n③ 先定大方向再抠细节'],
+['打得赢就打，打不赢就走。','《中国革命战争的战略问题》（1936年）','第一卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 有把握的事全力以赴\n② 没把握的事及时止损\n③ 知道什么时候该退比知道什么时候该进更重要'],
+['我们要用马克思主义的积极精神，克服消极的自由主义。','《反对自由主义》（1937年）','第二卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要做"老好人"——原则问题不让步\n② 见到不对的事要敢说\n③ 消极回避是对团队的不负责'],
+['自由主义以抽象的教条看待马克思主义的原则，而不是把它当作行动的指南。','《反对自由主义》（1937年）','第二卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 理论是工具不是教条\n② 学了就要用，不用等于没学\n③ 方法论要因时因地调整'],
+['主动权即是军队的自由权。','《抗日游击战争的战略问题》（1938年）','第二卷','主动与自觉','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 主动权=选择权=自由\n② 永远不要让自己陷入被动\n③ 提前布局才能掌控节奏'],
+['共产党员在八路军和新四军中，应该成为英勇作战的模范，执行命令的模范，遵守纪律的模范，政治工作的模范，内部团结统一的模范。','《中国共产党在民族战争中的地位》（1938年）','第二卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 在团队中做标杆，不是靠说而是靠做\n② 五个维度：业绩、执行、纪律、影响力、团结\n③ 模范不是天生的，是事事做到位'],
+['看一个青年是不是革命的，拿什么做标准呢？拿什么去辨别他呢？只有一个标准，这就是看他愿意不愿意、并且实行不实行和广大的工农群众结合在一块。','《青年运动的方向》（1939年）','第二卷','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 评判一个人看他做什么，不看他说什么\n② 是否与最广大的人群站在一起\n③ 实行比意愿更重要'],
+['一个人能力有大小，但只要有这点精神，就是一个高尚的人，一个纯粹的人，一个有道德的人，一个脱离了低级趣味的人，一个有益于人民的人。','《纪念白求恩》（1939年）','第二卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 能力有大小，精神无高低\n② 做一个纯粹的人：专注、认真、无私\n③ 每天问自己：今天我对谁有益了？'],
+['白求恩同志毫不利己专门利人的精神，表现在他对工作的极端的负责任，对同志对人民的极端的热忱。','《纪念白求恩》（1939年）','第二卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 对工作极端负责——不留死角\n② 对同事极端热忱——真心帮忙\n③ 毫不利己不是口号，是行动'],
+['人民这个概念在不同的国家和各个国家的不同的历史时期，有着不同的内容。','《中国革命和中国共产党》（1939年）','第二卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 概念随时代变化，不要刻舟求剑\n② 同一个词在不同语境含义不同\n③ 定义清楚"谁是谁"再行动'],
+['一定的文化是一定社会的政治和经济在观念形态上的反映。','《新民主主义论》（1940年）','第二卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 看到文化现象要想背后的经济和政治逻辑\n② 不孤立地看问题\n③ 理解了根源才能理解表象'],
+['真理只有一个，而究竟谁发现了真理，不依靠主观的夸张，而依靠客观的实践。','《新民主主义论》（1940年）','第二卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 谁对谁错不是看谁声音大\n② 让实践来检验，让结果来说话\n③ 放下自我，尊重事实'],
+['我们的策略原则，仍然是利用矛盾，争取多数，反对少数，各个击破。','《论政策》（1940年）','第二卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 在对手内部找分歧\n② 团结大多数人，孤立极少数\n③ 不要同时对付所有敌人——逐个击破'],
+['不单是懂得希腊就行了，还要懂得中国；不但要懂得外国革命史，还要懂得中国革命史；不但要懂得今天，还要懂得昨天与前天。','《改造我们的学习》（1941年）','第三卷','学习与成长','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 学习要古今中外结合\n② 不了解历史就不懂现在\n③ 知识面要宽，但落脚点在解决实际问题'],
+['我们要从国内外、省内外、县内外、区内外的实际情况出发，从其中引出其固有的而不是臆造的规律性。','《改造我们的学习》（1941年）','第三卷','调查研究','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 规律是客观存在的，不是你想出来的\n② 从实际出发而不是从理论出发\n③ 找到事物本身的规律再利用它'],
+['我们反对主观主义、宗派主义、党八股，有两条宗旨是必须注意的：第一是"惩前毖后"，第二是"治病救人"。','《整顿党的作风》（1942年）','第三卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 批评是为了帮助，不是为了整人\n② 对事不对人，改了就好\n③ 惩前毖后：前车之鉴；治病救人：以救为主'],
+['共产党员在民众运动中，应该是民众的朋友，而不是民众的上司，是诲人不倦的教师，而不是官僚主义的政客。','《整顿党的作风》（1942年）','第三卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 做朋友不做上司——放下架子\n② 做教师不做政客——真心教导\n③ 影响力来自服务，不是来自权力'],
+['共产党员如果真想做宣传，就要看对象，就要想一想自己的文章、演说、谈话、写字是给什么人看、给什么人听的。','《反对党八股》（1942年）','第三卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 沟通前先想：听众是谁？他们关心什么？\n② 用对方听得懂的语言说话\n③ 对象不同，表达方式就不同'],
+['语言这东西，不是随便可以学好的，非下苦功不可。','《反对党八股》（1942年）','第三卷','学习与成长','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 表达能力是核心竞争力\n② 好文笔需要大量阅读和刻意练习\n③ 每天写500字，坚持一年看效果'],
+['为什么人的问题，是一个根本的问题，原则的问题。','《在延安文艺座谈会上的讲话》（1942年）','第三卷','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 做任何事先想：这是为谁做的？\n② 服务对象决定了你的价值\n③ 不要为"所有人"——精准定位目标人群'],
+['在我党的一切实际工作中，凡属正确的领导，必须是从群众中来，到群众中去。','《关于领导方法的若干问题》（1943年）','第三卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 决策前听取一线声音\n② 方案到一线去验证\n③ 形成闭环：收集→决策→执行→反馈'],
+['从群众中集中起来又到群众中坚持下去，以形成正确的领导意见，这是基本的领导方法。','《关于领导方法的若干问题》（1943年）','第三卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 集中智慧做决策\n② 决策后回到基层去执行\n③ 在执行中修正和完善'],
+['为了争取新的胜利，要在党的干部中间提倡放下包袱和开动机器。','《学习和时局》（1944年）','第三卷','学习与成长','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 放下包袱：过去的成功或失败都不要成为负担\n② 开动机器：多思考、多分析\n③ 轻装上阵才能跑得快'],
+['所谓放下包袱，就是说，我们精神上的许多负担应该加以解除。','《学习和时局》（1944年）','第三卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 列出你的精神包袱：恐惧、偏见、骄傲、失败\n② 逐一审视：这个包袱还有用吗？\n③ 没用的果断放下'],
+['没有文化的军队是愚蠢的军队，而愚蠢的军队是不能战胜敌人的。','《文化工作中的统一战线》（1944年）','第三卷','学习与成长','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不学习的团队打不了硬仗\n② 文化=认知力=战斗力\n③ 投资团队学习就是投资战斗力'],
+['我们不是脱离生产的单纯军事力量，我们是既打仗又生产。','《必须学会做经济工作》（1945年）','第三卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要只会一种本事\n② 能打仗也能搞生产——复合型人才最值钱\n③ 多手准备比单条腿走路稳'],
+['我们应该谦虚、谨慎、戒骄、戒躁，全心全意地为中国人民服务。','《两个中国之命运》（1945年）','第三卷','自我修养','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 谦虚+谨慎+不骄+不躁=四个基本功\n② 全心全意=不带私心地服务\n③ 这四个字做到了，什么都能成'],
+['人民，只有人民，才是创造世界历史的动力。','《论联合政府》（1945年）','第三卷','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要迷信个人英雄\n② 群众的力量才是根本\n③ 成就=发动了多少人的力量'],
+['共产党人的一切言论行动，必须以合乎最广大人民群众的最大利益，为最广大人民群众所拥护为最高标准。','《论联合政府》（1945年）','第三卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 判断对错的最高标准：大多数人是否受益\n② 做决策时问：谁得益？多少人得益？\n③ 不得人心的方案迟早要失败'],
+['没有一个人民的军队，便没有人民的一切。','《论联合政府》（1945年）','第三卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 核心力量是根本保障\n② 没有实力就没有话语权\n③ 先建好自己的"军队"再谈理想'],
+['蒋介石总是要强迫人民接受战争，他左手拿着刀，右手也拿着刀。我们就按照他的办法，也拿起刀来。','《抗日战争胜利后的时局和我们的方针》（1945年）','第四卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 对手用什么方式来，你就用什么方式回\n② 不要心存幻想——该准备就准备\n③ 以斗争求和平则和平存'],
+['纸上的东西并不等于现实的东西。','《关于重庆谈判》（1945年）','第四卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 协议签了不等于执行了\n② 不要被纸面承诺麻痹\n③ 验证靠行动不靠文件'],
+['应集中绝对优势的兵力，即集中六倍、或五倍、或四倍于敌的兵力，至少也要有三倍于敌的兵力。','《集中优势兵力，各个歼灭敌人》（1946年）','第四卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 要打就集中压倒性力量\n② 三倍兵力是最低保障\n③ 宁可少打几个，也要每个都打赢'],
+['原子弹是美国反动派用来吓人的一只纸老虎，看样子可怕，实际上并不可怕。','《和美国记者安娜·路易斯·斯特朗的谈话》（1946年）','第四卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 看起来最可怕的东西往往最虚\n② 恐惧来自未知——了解了就不怕了\n③ 别人的王牌也是纸糊的'],
+['我们的战略是"以一当十"，我们的战术是"以十当一"。','《目前形势和我们的任务》（1947年）','第四卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 战略上敢于以少胜多\n② 战术上必须以多胜少\n③ 大胆设想，谨慎执行'],
+['按照实际情况决定工作方针，这是一切共产党员所必须牢牢记住的最基本的工作方法。','《在晋绥干部会议上的讲话》（1948年）','第四卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 方案要从实际出发，不是从理论出发\n② 情况变了方针也要变\n③ 这是最基本也最容易忘的'],
+['报纸的作用和力量，就在它能使党的纲领路线，方针政策，工作任务和工作方法，最迅速最广泛地同群众见面。','《对晋绥日报编辑人员的谈话》（1948年）','第四卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 沟通的力量在于速度和广度\n② 把信息快速传达到每个人\n③ 透明沟通减少误解和阻力'],
+['凡是反动的东西，你不打，他就不倒。这也和扫地一样，扫帚不到，灰尘照例不会自己跑掉。','《将革命进行到底》（1948年）','第四卷','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 问题不会自己消失——必须主动解决\n② 不行动就没有结果\n③ 扫帚不到灰尘不走，不努力问题不除'],
+['中国的革命是伟大的，但革命以后的路程更长，工作更伟大，更艰苦。','《在中国共产党第七届中央委员会第二次全体会议上的报告》（1949年）','第四卷','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 取得阶段性胜利后不要松懈\n② 后面的路更长更难\n③ 成功不是终点，是新起点'],
+['夺取全国胜利，这只是万里长征走完了第一步。','《在中国共产党第七届中央委员会第二步全体会议上的报告》（1949年）','第四卷','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 大目标达成只是开始\n② 不要在第一步就庆祝\n③ 未来的挑战比过去更大'],
+['党委书记要善于当"班长"。','《党委会的工作方法》（1949年）','第四卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 当领导就是当班长——带头干\n② 不是发号施令而是协调带动\n③ 班长做好了，团队就有主心骨'],
+['党委的同志必须学好"弹钢琴"。','《党委会的工作方法》（1949年）','第四卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 多项工作要有节奏地推进\n② 有的用力有的轻点——轻重缓急\n③ 十个指头都要动，但不能乱弹'],
+['胸中有"数"。这是说，对情况和问题一定要注意到它们的数量方面，要有基本的数量的分析。','《党委会的工作方法》（1949年）','第四卷','工作方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 做决策要有数据支撑\n② 质量互变：数量到了一定程度会质变\n③ 心里有数才不会慌'],
+['准备斗争，并不是说我们要去打人家，而是说人家要来打我们，我们有了准备，就不至于措手不及。','《丢掉幻想，准备斗争》（1949年）','第四卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 准备不是为了进攻而是为了防守\n② 有备无患——最坏情况想清楚\n③ 准备好了反而可能不用打'],
+['多少一点困难怕什么。封锁吧，封锁十年八年，中国的一切问题都解决了。','《别了，司徒雷登》（1949年）','第四卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 困难和封锁反而倒逼成长\n② 被逼到绝路才有突破\n③ 自力更生是最可靠的路'],
+['总结我们的经验，集中到一点，就是工人阶级（经过共产党）领导的以工农联盟为基础的人民民主专政。','《论人民民主专政》（1949年）','第四卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 经验要总结提炼成一句话\n② 复杂的事情也可以归纳为核心要点\n③ 找到那个"集中到一点"的本质'],
+['我们的民族将再也不是一个被人侮辱的民族了，我们已经站起来了。','《中国人民站起来了》（1949年）','第五卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 自信是改变命运的第一步\n② 不再接受被轻视\n③ 站起来意味着承担更大责任'],
+['我们现在在经济战线上还要进行很多的工作，才能取得胜利。','《为争取国家财政经济状况的基本好转而斗争》（1950年）','第五卷','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 经济基础决定上层建筑\n② 不要急于求成——很多工作要做\n③ 耐心打好基础'],
+['我们不要四面出击，不要树敌太多，必须在一个方面有所让步，有所缓和。','《不要四面出击》（1950年）','第五卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 不要同时对付所有对手\n② 集中力量解决主要矛盾\n③ 次要矛盾暂时缓和——分化瓦解'],
+['必须深刻地估计到各种可能遇到和必然会遇到的困难情况，并准备用高度的热情、勇气、细心和刻苦耐劳的精神去克服这些困难。','《给中国人民志愿军的命令》（1950年）','第五卷','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 先想清楚会遇到什么困难\n② 准备好四样东西：热情、勇气、细心、耐劳\n③ 困难想足了，实际反而顺利'],
+['我们应当相信群众，我们应当相信党，这是两条根本的原理。','《关于农业合作化问题》（1955年）','第五卷','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 相信群众——他们比你想象的更有智慧\n② 相信组织——团队力量大于个人\n③ 怀疑的时候回到这两条原理'],
+['群众中蕴藏了一种极大的社会主义的积极性。','《〈中国农村的社会主义高潮〉的序言》（1955年）','第五卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 群众的潜力远超你的想象\n② 善于发现和激发团队的积极性\n③ 被激发的团队能创造奇迹'],
+['一定要努力把党内党外、国内国外的直接的、间接的一切积极因素，全部调动起来，把我国建设成为一个强大的社会主义国家。','《论十大关系》（1956年）','第五卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 直接因素+间接因素=全部资源\n② 国内国外、党内党外——不要遗漏任何力量\n③ 调动积极性是领导的核心任务'],
+['我们对各个矛盾都要研究，找出解决办法来，不能粗枝大叶地对待。','《论十大关系》（1956年）','第五卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 每个矛盾都要认真对待\n② 不要用同一套方案套所有问题\n③ 精细化管理取代粗放式管理'],
+['一切反动派都是纸老虎。看起来，反动派的样子是可怕的，但是实际上并没有什么了不起的力量。','《美帝国主义是纸老虎》（1956年）','第五卷','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 可怕的外表下往往虚弱\n② 分析对手的真实实力\n③ 战略上藐视，战术上重视'],
+['我们各方面的建设方针，就是调动一切积极因素，并且化消极因素为积极因素。','《增强党的团结，继承党的传统》（1956年）','第五卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 调动积极因素：用好已有资源\n② 化消极为积极：转化不利因素\n③ 管理的核心是转化——不是消灭而是转化'],
+['在人民内部，不可以没有自由，也不可以没有纪律；不可以没有民主，也不可以没有集中。','《关于正确处理人民内部矛盾的问题》（1957年）','第五卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 自由和纪律缺一不可\n② 民主和集中是对立统一\n③ 管理就是在两端之间找平衡'],
+['不同矛盾只有用不同质的方法才能解决。这是马克思列宁主义者必须严格遵守的一个原则。','《关于正确处理人民内部矛盾的问题》（1957年）','第五卷','思想方法','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 对症下药——一把钥匙开一把锁\n② 先判断矛盾性质再选方法\n③ 不要用处理敌我矛盾的方法处理内部矛盾'],
+['我们要保持过去革命战争时期的那么一股劲，那么一股革命热情，那么一种拼命精神，把革命工作做到底。','《坚持艰苦奋斗，密切联系群众》（1957年）','第五卷','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 保持那股劲——不要因为条件好了就松懈\n② 热情+拼命精神=持续战斗力\n③ 把工作做到底，不要半途而废'],
+['我们的同志一定要懂得，思想问题，人民内部的思想问题，只能用讨论的方法、批评的方法、说服教育的方法去解决，而不能用强制的方法去解决。','《在中国共产党全国宣传工作会议上的讲话》（1957年）','第五卷','领导力','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 思想问题不能靠命令解决\n② 讨论+批评+说服=三步法\n③ 强压只会反弹，沟通才能改变'],
+['善观风色，善择时机。','《事情正在起变化》（1957年）','第五卷','战略战术','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 观察形势要有敏锐度\n② 选择时机比努力更重要\n③ 风向变了策略也要变'],
+['我们是促进派，不是促退派，也不是观潮派。','《做革命的促进派》（1957年）','第五卷','主动与自觉','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 做推动事情向前的人\n② 不要做旁观者\n③ 主动促进变化而不是等待变化'],
+['团结—批评—团结，就是说，从团结的愿望出发，经过批评或者斗争使矛盾得到解决，从而在新的基础上达到新的团结。','《党内团结的辩证方法》（1957年）','第五卷','团队与协作','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 先有团结的意愿再批评\n② 批评是为了更好的团结\n③ 批评后要重建信任——形成新的团结'],
+['独有英雄驱虎豹，更无豪杰怕熊罴。','《七律·冬云》（1962年）','诗词集','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 真正的强者不畏惧任何威胁\n② 困难越大越要挺住\n③ 做英雄不做懦夫'],
+['踏遍青山人未老，风景这边独好。','《清平乐·会昌》（1934年）','诗词集','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 走过千山万水依然充满活力\n② 最好的风景就在你所在的地方\n③ 保持乐观——眼前的就是最好的'],
+['雄关漫道真如铁，而今迈步从头越。','《忆秦娥·娄山关》（1935年）','诗词集','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 困难再大也不过是铁——可以越过\n② 从头开始不丢人\n③ 迈步向前——过去的不回头'],
+['世上无难事，只要肯登攀。','《水调歌头·重上井冈山》（1965年）','诗词集','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 没有做不到的事——只看你肯不肯\n② "肯"是关键——意愿决定行动\n③ 登攀=持续攀登，不是一步到位'],
+['天若有情天亦老，人间正道是沧桑。','《七律·人民解放军占领南京》（1949年）','诗词集','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 变化是宇宙的规律\n② 正道虽然沧桑但必须走\n③ 接受变化，拥抱变化'],
+['宜将剩勇追穷寇，不可沽名学霸王。','《七律·人民解放军占领南京》（1949年）','诗词集','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 有优势时要乘胜追击\n② 不要为了虚名错失良机\n③ 一鼓作气，不要半途停手'],
+['为有牺牲多壮志，敢教日月换新天。','《七律·到韶山》（1959年）','诗词集','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 有牺牲才有壮志\n② 敢想才能敢干\n③ 要有改变世界的气魄'],
+['不到长城非好汉，屈指行程二万。','《清平乐·六盘山》（1935年）','诗词集','信念与坚持','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 设定一个"长城"目标——不到不罢休\n② 行程再远也要坚持\n③ 好汉不是天生的，是走出来的'],
+['可上九天揽月，可下五洋捉鳖，谈笑凯歌还。','《水调歌头·重上井冈山》（1965年）','诗词集','信心与勇气','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 没有到不了的高度\n② 没有下不了的深度\n③ 谈笑间完成任务——举重若轻'],
+['春风杨柳万千条，六亿神州尽舜尧。','《七律二首·送瘟神》（1958年）','诗词集','价值与意义','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 每个人都可以成为圣贤\n② 环境好了人也会变好\n③ 相信人的可塑性'],
+['多少事，从来急；一万年太久，只争朝夕。','《满江红·和郭沫若同志》（1963年）','诗词集','时间与行动','https://www.qstheory.cn/books/2019-07/31/c_1119448591_6.htm','① 紧迫感是第一生产力\n② 不要等"完美时机"\n③ 今天能做的不要拖到明天'],
+];
+var N=Q.length;
+var history=[],currentIdx=-1,animating=false;
+
+function E(id){return document.getElementById(id)}
+
+/* ========== 星空 ========== */
+(function(){
+  var b=E('starsBox');
+  for(var i=0;i<40;i++){
+    var s=document.createElement('div');
+    s.style.cssText='position:absolute;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;width:'+(1+Math.random()*2)+'px;height:'+(1+Math.random()*2)+'px;background:var(--star-color);border-radius:50%;opacity:'+(.12+Math.random()*.28)+';animation:twinkle '+(2+Math.random()*3)+'s ease-in-out '+Math.random()*3+'s infinite';
+    b.appendChild(s);
+  }
+  var st=document.createElement('style');
+  st.textContent='@keyframes twinkle{0%,100%{opacity:.12}50%{opacity:.5}}';
+  document.head.appendChild(st);
+})();
+
+/* ========== 粒子 ========== */
+function spawnParticles(){
+  var b=E('particleBox'),cx=window.innerWidth/2,cy=window.innerHeight/2;
+  for(var i=0;i<22;i++){
+    var p=document.createElement('div');p.className='pp';
+    var a=(Math.PI*2/22)*i+(Math.random()-.5),d=70+Math.random()*110;
+    p.style.cssText='left:'+cx+'px;top:'+cy+'px;width:'+(2+Math.random()*4)+'px;height:'+(2+Math.random()*4)+'px;background:'+(Math.random()>.5?'#C9A227':'#B22222')+';--px:'+Math.cos(a)*d+'px;--py:'+Math.sin(a)*d+'px';
+    b.appendChild(p);setTimeout(function(p2){return function(){p2.remove()}}(p),1700);
+  }
+}
+
+/* ========== 色彩方案定义 ========== */
+var COLOR_SCHEMES={
+  dark:{
+    eye:{
+      bg:'radial-gradient(ellipse at 50% 55%,#1E241A 0%,#151A12 40%,#0D110B 100%)',
+      bgFlat:'#1E241A',
+      text:'#C8D4B8',
+      textDim:'#8FA880',
+      textBright:'#E0E8D5',
+      accent:'#A0B880',
+      accentGlow:'rgba(160,184,128,.35)',
+      accentDim:'rgba(160,184,128,.2)',
+      cardBg:'linear-gradient(160deg,#1A2016 0%,#1E261A 50%,#161C12 100%)',
+      cardBgFlat:'#1A2016',
+      cardText:'#C8D4B8',
+      cardBorder:'#A0B880',
+      cardBorderDim:'rgba(160,184,128,.15)',
+      cardShadow:'0 12px 50px rgba(0,0,0,.65)',
+      actionBg:'rgba(160,184,128,.05)',
+      actionBorder:'rgba(160,184,128,.1)',
+      btnBg:'rgba(160,184,128,.04)',
+      btnText:'#A0B880',
+      btnBorder:'rgba(160,184,128,.4)',
+      btnHover:'rgba(160,184,128,.12)',
+      divider:'linear-gradient(90deg,transparent,rgba(160,184,128,.4),transparent)',
+      starColor:'#A0B880',
+      overlayBg:'rgba(0,0,0,.45)',
+      panelBg:'rgba(18,24,15,.97)',
+      panelText:'#C8D4B8',
+      panelBorder:'rgba(160,184,128,.15)',
+      toggleBg:'rgba(255,255,255,.06)',
+      toggleActive:'rgba(160,184,128,.18)'
+    },
+    reading:{
+      bg:'radial-gradient(ellipse at 50% 55%,#1A1A22 0%,#111118 40%,#0A0A10 100%)',
+      bgFlat:'#111118',
+      text:'#E2D4B8',
+      textDim:'#A89878',
+      textBright:'#F5ECD7',
+      accent:'#D4A840',
+      accentGlow:'rgba(212,168,64,.4)',
+      accentDim:'rgba(212,168,64,.25)',
+      cardBg:'linear-gradient(160deg,#15151D 0%,#1C1820 50%,#111019 100%)',
+      cardBgFlat:'#15151D',
+      cardText:'#E2D4B8',
+      cardBorder:'#D4A840',
+      cardBorderDim:'rgba(212,168,64,.2)',
+      cardShadow:'0 12px 50px rgba(0,0,0,.7)',
+      actionBg:'rgba(212,168,64,.06)',
+      actionBorder:'rgba(212,168,64,.14)',
+      btnBg:'rgba(212,168,64,.05)',
+      btnText:'#D4A840',
+      btnBorder:'rgba(212,168,64,.45)',
+      btnHover:'rgba(212,168,64,.14)',
+      divider:'linear-gradient(90deg,transparent,rgba(212,168,64,.45),transparent)',
+      starColor:'#C9A227',
+      overlayBg:'rgba(0,0,0,.5)',
+      panelBg:'rgba(20,18,25,.97)',
+      panelText:'#E2D4B8',
+      panelBorder:'rgba(212,168,64,.2)',
+      toggleBg:'rgba(255,255,255,.08)',
+      toggleActive:'rgba(212,168,64,.2)'
+    },
+    bright:{
+      bg:'radial-gradient(ellipse at 50% 55%,#000000 0%,#050505 40%,#000000 100%)',
+      bgFlat:'#000000',
+      text:'#FFFFFF',
+      textDim:'#CCCCCC',
+      textBright:'#FFFFFF',
+      accent:'#FFD700',
+      accentGlow:'rgba(255,215,0,.5)',
+      accentDim:'rgba(255,215,0,.3)',
+      cardBg:'linear-gradient(160deg,#080808 0%,#0F0F0F 50%,#050505 100%)',
+      cardBgFlat:'#080808',
+      cardText:'#FFFFFF',
+      cardBorder:'#FFD700',
+      cardBorderDim:'rgba(255,215,0,.25)',
+      cardShadow:'0 12px 50px rgba(0,0,0,.9)',
+      actionBg:'rgba(255,215,0,.08)',
+      actionBorder:'rgba(255,215,0,.2)',
+      btnBg:'rgba(255,215,0,.06)',
+      btnText:'#FFD700',
+      btnBorder:'rgba(255,215,0,.55)',
+      btnHover:'rgba(255,215,0,.18)',
+      divider:'linear-gradient(90deg,transparent,rgba(255,215,0,.5),transparent)',
+      starColor:'#FFD700',
+      overlayBg:'rgba(0,0,0,.6)',
+      panelBg:'rgba(10,10,10,.97)',
+      panelText:'#FFFFFF',
+      panelBorder:'rgba(255,215,0,.25)',
+      toggleBg:'rgba(255,255,255,.1)',
+      toggleActive:'rgba(255,215,0,.25)'
+    }
+  },
+  light:{
+    eye:{
+      bg:'linear-gradient(180deg,#F2F6EE 0%,#EEF2E8 50%,#E8EDE0 100%)',
+      bgFlat:'#F2F6EE',
+      text:'#3D4A35',
+      textDim:'#6B7A63',
+      textBright:'#2A3324',
+      accent:'#6B8E5A',
+      accentGlow:'rgba(107,142,90,.3)',
+      accentDim:'rgba(107,142,90,.15)',
+      cardBg:'linear-gradient(160deg,#F6F9F2 0%,#FBFDF8 50%,#F0F4EA 100%)',
+      cardBgFlat:'#F6F9F2',
+      cardText:'#3D4A35',
+      cardBorder:'#8FA880',
+      cardBorderDim:'rgba(143,168,128,.25)',
+      cardShadow:'0 8px 30px rgba(0,0,0,.08)',
+      actionBg:'rgba(107,142,90,.06)',
+      actionBorder:'rgba(107,142,90,.15)',
+      btnBg:'rgba(107,142,90,.05)',
+      btnText:'#6B8E5A',
+      btnBorder:'rgba(107,142,90,.4)',
+      btnHover:'rgba(107,142,90,.12)',
+      divider:'linear-gradient(90deg,transparent,rgba(107,142,90,.35),transparent)',
+      starColor:'#8FA880',
+      overlayBg:'rgba(0,0,0,.15)',
+      panelBg:'rgba(248,251,244,.98)',
+      panelText:'#3D4A35',
+      panelBorder:'rgba(107,142,90,.2)',
+      toggleBg:'rgba(0,0,0,.04)',
+      toggleActive:'rgba(107,142,90,.15)'
+    },
+    reading:{
+      bg:'linear-gradient(180deg,#FBF8F0 0%,#F7F2E6 50%,#F2ECD8 100%)',
+      bgFlat:'#FBF8F0',
+      text:'#2D2010',
+      textDim:'#6B5B4F',
+      textBright:'#1A1008',
+      accent:'#B8860B',
+      accentGlow:'rgba(184,134,11,.3)',
+      accentDim:'rgba(184,134,11,.18)',
+      cardBg:'linear-gradient(160deg,#FFFDF7 0%,#FFFFFB 50%,#FDF8F0 100%)',
+      cardBgFlat:'#FFFDF7',
+      cardText:'#2D2010',
+      cardBorder:'#D4A843',
+      cardBorderDim:'rgba(212,168,67,.3)',
+      cardShadow:'0 8px 30px rgba(0,0,0,.1)',
+      actionBg:'rgba(184,134,11,.06)',
+      actionBorder:'rgba(184,134,11,.15)',
+      btnBg:'rgba(184,134,11,.05)',
+      btnText:'#B8860B',
+      btnBorder:'rgba(184,134,11,.4)',
+      btnHover:'rgba(184,134,11,.12)',
+      divider:'linear-gradient(90deg,transparent,rgba(184,134,11,.35),transparent)',
+      starColor:'#D4A843',
+      overlayBg:'rgba(0,0,0,.12)',
+      panelBg:'rgba(255,252,246,.98)',
+      panelText:'#2D2010',
+      panelBorder:'rgba(184,134,11,.2)',
+      toggleBg:'rgba(0,0,0,.04)',
+      toggleActive:'rgba(184,134,11,.15)'
+    },
+    bright:{
+      bg:'linear-gradient(180deg,#FFFFFF 0%,#FCFCFC 50%,#FAFAFA 100%)',
+      bgFlat:'#FFFFFF',
+      text:'#111111',
+      textDim:'#444444',
+      textBright:'#000000',
+      accent:'#996600',
+      accentGlow:'rgba(153,102,0,.25)',
+      accentDim:'rgba(153,102,0,.15)',
+      cardBg:'linear-gradient(160deg,#FFFFFF 0%,#FDFDFD 50%,#F8F8F8 100%)',
+      cardBgFlat:'#FFFFFF',
+      cardText:'#111111',
+      cardBorder:'#B8860B',
+      cardBorderDim:'rgba(184,134,11,.35)',
+      cardShadow:'0 8px 30px rgba(0,0,0,.12)',
+      actionBg:'rgba(153,102,0,.05)',
+      actionBorder:'rgba(153,102,0,.12)',
+      btnBg:'rgba(153,102,0,.04)',
+      btnText:'#996600',
+      btnBorder:'rgba(153,102,0,.45)',
+      btnHover:'rgba(153,102,0,.1)',
+      divider:'linear-gradient(90deg,transparent,rgba(153,102,0,.4),transparent)',
+      starColor:'#B8860B',
+      overlayBg:'rgba(0,0,0,.15)',
+      panelBg:'rgba(255,255,255,.98)',
+      panelText:'#111111',
+      panelBorder:'rgba(153,102,0,.2)',
+      toggleBg:'rgba(0,0,0,.04)',
+      toggleActive:'rgba(153,102,0,.15)'
+    }
+  }
+};
+
+/* ========== 当前设置状态 ========== */
+var currentTheme='light';
+var currentMode='reading';
+var currentFontSize=16;
+var currentLineHeight=2.4;
+
+/* ========== 应用主题 ========== */
+function applyTheme(theme,mode){
+  var s=COLOR_SCHEMES[theme][mode];
+  var r=document.documentElement.style;
+  var keys={
+    '--bg':'bg','--bg-flat':'bgFlat','--text':'text','--text-dim':'textDim',
+    '--text-bright':'textBright','--accent':'accent','--accent-glow':'accentGlow',
+    '--accent-dim':'accentDim','--card-bg':'cardBg','--card-bg-flat':'cardBgFlat',
+    '--card-text':'cardText','--card-border':'cardBorder',
+    '--card-border-dim':'cardBorderDim','--card-shadow':'cardShadow',
+    '--action-bg':'actionBg','--action-border':'actionBorder',
+    '--btn-bg':'btnBg','--btn-text':'btnText','--btn-border':'btnBorder',
+    '--btn-hover':'btnHover','--divider':'divider',
+    '--star-color':'starColor','--overlay-bg':'overlayBg',
+    '--panel-bg':'panelBg','--panel-text':'panelText',
+    '--panel-border':'panelBorder','--toggle-bg':'toggleBg',
+    '--toggle-active':'toggleActive'
+  };
+  for(var k in keys){
+    if(s.hasOwnProperty(keys[k])) r.setProperty(k,s[keys[k]]);
+  }
+  currentTheme=theme;currentMode=mode;
+  // Update star particles
+  updateStarColors();
+  // Save to localStorage
+  try{
+    localStorage.setItem('mao-tarot-theme',theme);
+    localStorage.setItem('mao-tarot-mode',mode);
+    localStorage.setItem('mao-tarot-fontSize',currentFontSize);
+    localStorage.setItem('mao-tarot-lineHeight',currentLineHeight);
+  }catch(e){}
+}
+
+/* ========== 更新星空颜色 ========== */
+function updateStarColors(){
+  var stars=document.querySelectorAll('#starsBox div');
+  var s=COLOR_SCHEMES[currentTheme][currentMode];
+  for(var i=0;i<stars.length;i++){
+    stars[i].style.background=s.starColor;
+  }
+}
+
+/* ========== 显示 Toast 反馈 ========== */
+var toastTimer;
+function showToast(msg){
+  var t=E('modeToast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('show')},1800);
+}
+
+/* ========== 设置面板逻辑 ========== */
+// 打开面板
+function openSettings(){
+  E('settingsOverlay').classList.add('show');
+  E('settingsPanel').classList.add('show');
+  // 同步UI状态
+  syncPanelUI();
+}
+
+// 关闭面板
+function closeSettings(){
+  E('settingsOverlay').classList.remove('show');
+  E('settingsPanel').classList.remove('show');
+}
+
+// 同步面板UI
+function syncPanelUI(){
+  var topts=E('themeToggle').querySelectorAll('.theme-opt');
+  for(var i=0;i<topts.length;i++){
+    topts[i].classList.toggle('active',topts[i].dataset.theme===currentTheme);
+  }
+  var mopts=E('modeRow').querySelectorAll('.mode-opt');
+  for(var i=0;i<mopts.length;i++){
+    mopts[i].classList.toggle('active',mopts[i].dataset.mode===currentMode);
+  }
+  E('sizeVal').textContent=currentFontSize;
+  E('spacingVal').textContent=currentLineHeight.toFixed(1);
+  var bopts=E('backRow').querySelectorAll('.mode-opt');
+  for(var i=0;i<bopts.length;i++){
+    bopts[i].classList.toggle('active',bopts[i].dataset.back===currentBack);
+  }
+}
+
+// 主题切换
+E('themeToggle').addEventListener('click',function(e){
+  var btn=e.target.closest('.theme-opt');
+  if(!btn)return;
+  var theme=btn.dataset.theme;
+  if(theme===currentTheme)return;
+  applyTheme(theme,currentMode);
+  syncPanelUI();
+  var label=theme==='light'?'浅色':'深色';
+  showToast('已切换至 '+label+' 主题');
+});
+
+// 模式切换
+E('modeRow').addEventListener('click',function(e){
+  var btn=e.target.closest('.mode-opt');
+  if(!btn)return;
+  var mode=btn.dataset.mode;
+  if(mode===currentMode)return;
+  applyTheme(currentTheme,mode);
+  syncPanelUI();
+  var labels={eye:'护眼模式',reading:'阅读模式',bright:'强光模式'};
+  showToast('已切换至 '+labels[mode]);
+});
+
+// 字号调节
+E('sizeControl').addEventListener('click',function(e){
+  var btn=e.target.closest('.size-btn');
+  if(!btn)return;
+  var a=btn.dataset.action;
+  if(a==='up') currentFontSize=Math.min(22,currentFontSize+1);
+  else currentFontSize=Math.max(12,currentFontSize-1);
+  document.documentElement.style.setProperty('--font-size',currentFontSize+'px');
+  E('sizeVal').textContent=currentFontSize;
+  try{localStorage.setItem('mao-tarot-fontSize',currentFontSize)}catch(e){}
+});
+
+// 行距调节
+E('spacingControl').addEventListener('click',function(e){
+  var btn=e.target.closest('.size-btn');
+  if(!btn)return;
+  var a=btn.dataset.action;
+  if(a==='up') currentLineHeight=Math.min(3.2,currentLineHeight+0.1);
+  else currentLineHeight=Math.max(1.6,currentLineHeight-0.1);
+  currentLineHeight=Math.round(currentLineHeight*10)/10;
+  document.documentElement.style.setProperty('--line-height',currentLineHeight);
+  E('spacingVal').textContent=currentLineHeight.toFixed(1);
+  try{localStorage.setItem('mao-tarot-lineHeight',currentLineHeight)}catch(e){}
+});
+
+/* ========== 牌背样式切换 ========== */
+var currentBack='classic';
+function applyBackStyle(style){
+  currentBack=style;
+  var topCard=E('topCard');
+  var flyFront=E('flyFront');
+  var deckCards=document.querySelectorAll('.deck-card');
+
+  // 只更新 data-back 属性，CSS 自动处理背景图
+  topCard.setAttribute('data-back',style);
+  flyFront.setAttribute('data-back',style);
+  deckCards.forEach(function(c){c.setAttribute('data-back',style)});
+
+  // 同步面板按钮
+  E('backRow').querySelectorAll('.mode-opt').forEach(function(b){
+    b.classList.toggle('active',b.dataset.back===style);
+  });
+
+  try{localStorage.setItem('mao-tarot-backStyle',style)}catch(e){}
+}
+
+// 牌背切换事件
+E('backRow').addEventListener('click',function(e){
+  var btn=e.target.closest('.mode-opt');
+  if(!btn)return;
+  applyBackStyle(btn.dataset.back);
+});
+E('panelClose').addEventListener('click',closeSettings);
+E('settingsOverlay').addEventListener('click',closeSettings);
+
+// 设置按钮
+E('settingsBtn').addEventListener('click',function(e){
+  e.stopPropagation();
+  openSettings();
+});
+
+// 阻止面板内点击冒泡
+E('settingsPanel').addEventListener('click',function(e){
+  e.stopPropagation();
+});
+
+/* ========== 恢复保存的设置 ========== */
+(function(){
+  try{
+    var t=localStorage.getItem('mao-tarot-theme');
+    var m=localStorage.getItem('mao-tarot-mode');
+    var fs=localStorage.getItem('mao-tarot-fontSize');
+    var lh=localStorage.getItem('mao-tarot-lineHeight');
+    var bs=localStorage.getItem('mao-tarot-backStyle');
+    if(t && COLOR_SCHEMES[t] && COLOR_SCHEMES[t][m||'reading']){
+      currentTheme=t;currentMode=m||'reading';
+    }
+    if(fs) currentFontSize=parseInt(fs)||16;
+    if(lh) currentLineHeight=parseFloat(lh)||2.4;
+    if(bs && ['classic','yushi','weimin'].indexOf(bs)>=0){
+      applyBackStyle(bs);
+    }
+    document.documentElement.style.setProperty('--font-size',currentFontSize+'px');
+    document.documentElement.style.setProperty('--line-height',currentLineHeight);
+  }catch(e){}
+  applyTheme(currentTheme,currentMode);
+})();
+
+/* ========== 抽取卡牌 ========== */
+function drawCard(){
+  if(animating)return;
+  animating=true;
+
+  // 强制重置 flyInner：清 transition，重置 transform，防上轮残留
+  var fly=E('flyCard'),flyIn=E('flyInner');
+  flyIn.style.transition='none';
+  flyIn.style.transform='rotateY(0deg)';
+  void flyIn.offsetWidth;
+
+  if(history.length>=N)history=[];
+  var wi;
+  do{wi=Math.floor(Math.random()*N)}while(history.indexOf(wi)>=0);
+  history.push(wi);currentIdx=wi;
+  var wq=Q[wi];
+
+  // 1. 飞牌（始终居中，不做位移动画，只淡入+翻转）
+  var fly=E('flyCard'),flyIn=E('flyInner');
+  flyIn.style.transition='none';
+  flyIn.style.transform='rotateY(0deg)';
+  fly.style.transition='none';
+  fly.style.display='block';fly.style.opacity='0';
+  // 清除残留 JS 尺寸，让 CSS 变量生效
+  fly.style.width='';fly.style.height='';
+  fly.style.borderRadius='13px';
+
+  topCard.style.opacity='0';
+
+  void fly.offsetWidth;
+
+  fly.style.transition='opacity .3s ease,border-radius .4s ease';
+  fly.style.opacity='1';
+
+  // 翻面
+  setTimeout(function(){
+    fly.style.transition='opacity .4s ease';
+    flyIn.style.transition='transform 0.85s cubic-bezier(.42,0,.58,1)';
+    flyIn.style.transform='rotateY(180deg)';
+    spawnParticles();
+  },700);
+
+  // 显示结果：飞牌淡出，结果卡由 CSS 变量决定尺寸（与飞牌一致）
+  setTimeout(function(){
+    var fly=E('flyCard');
+    fly.style.opacity='0';
+    setTimeout(function(){fly.style.display='none'},450);
+    showResult(wi,wq);
+    topCard.style.opacity='1';animating=false;
+  },1900);
+}
+
+/* ========== 语录文字分行排版 ==========
+   规则：每行最多 14 字（含标点），优先在标点后换行；
+   每行 8—14 字，末行 ≥5 字，整体协调自然 */
+function wrapQuoteText(text){
+  var N=text.length;
+  if(N<=14) return [text];
+  var PUNCT='，。、；：！？';
+  var goodPos=[];
+  for(var i=1;i<N;i++){
+    var prev=text[i-1];
+    if(PUNCT.indexOf(prev)>=0) goodPos.push(i);
+    var c=text[i];
+    if('就又也要便而以'.indexOf(c)>=0) goodPos.push(i);
+  }
+  var lines=[],start=0;
+  while(start<N){
+    var remaining=N-start;
+    if(remaining>=5 && remaining<=14){lines.push(text.substring(start));break;}
+    var bestEnd=-1;var bestScore=-1/0;
+    var hi=Math.min(start+14,N-5);
+    for(var end=start+5;end<=hi;end++){
+      var lineLen=end-start;
+      if(lineLen>14) break;
+      var score=0;
+      var prevChar=text[end-1];
+      if(PUNCT.indexOf(prevChar)>=0) score+=100;
+      var nextChar=text[end];
+      if('就又也要便而以'.indexOf(nextChar)>=0) score+=30;
+      if(lineLen>=8&&lineLen<=14) score+=20;
+      else if(lineLen>=6) score+=5;
+      score-=Math.abs(lineLen-11)*2;
+      var rest=N-end;
+      if(rest>0&&rest<5) continue;
+      if(score>bestScore){bestScore=score;bestEnd=end;}
+    }
+    if(bestEnd<0){
+      for(var k=0;k<goodPos.length;k++){
+        var gp=goodPos[k];
+        if(gp>start&&gp<=start+14){var rest=N-gp;if(rest===0||rest>=5){bestEnd=gp;break;}}
+      }
+    }
+    if(bestEnd<0){bestEnd=Math.min(start+14,N);while(bestEnd<N&&(N-bestEnd)>0&&(N-bestEnd)<5)bestEnd--;}
+    lines.push(text.substring(start,bestEnd));
+    start=bestEnd;
+  }
+  for(var i=1;i<lines.length;i++){
+    if(lines[i].length<6&&lines[i-1].length+lines[i].length<=14){lines[i-1]+=lines[i];lines.splice(i,1);i--;}
+  }
+  return lines;
+}
+
+/* ========== 显示结果 ========== */
+function showResult(idx,wq){
+  var card=E('resultCard');
+  var lines=wrapQuoteText(wq[0]);
+  var html='';
+  for(var i=0;i<lines.length;i++){
+    html+='<div class="quote-line">'+lines[i]+'</div>';
+  }
+  E('resultText').innerHTML=html;
+  E('resultSrcText').textContent=wq[1]+' · '+wq[2]+' · '+wq[3];
+  E('resultAction').textContent=wq[5];
+  E('resultLinkBtn').dataset.url=wq[4];
+  card.classList.add('show');
+}
+
+/* ========== 打开原文链接 ========== */
+function openLink(){
+  var btn=E('resultLinkBtn');
+  var url=btn.dataset.url;
+  if(url) window.open(url,'_blank');
+}
+
+/* ========== 绑定事件 ========== */
+// "抽卡牌"按钮
+E('drawAgainBtn').addEventListener('click',function(){
+  if(animating)return;
+  var card=E('resultCard');
+  card.classList.remove('show');
+  setTimeout(function(){drawCard()},350);
+});
+
+// 牌堆任意位置点击 → 抽牌
+E('deckArea').addEventListener('click',function(){
+  if(animating)return;
+  var card=E('resultCard');
+  if(card.classList.contains('show')){card.classList.remove('show');setTimeout(function(){drawCard()},350)}
+  else drawCard();
+});
+
+// 结果卡点击 → 抽下一张（点按钮除外）
+E('resultCard').addEventListener('click',function(e){
+  if(animating)return;
+  if(e.target.closest('.btn-row'))return;
+  var card=E('resultCard');
+  if(card.classList.contains('show')){
+    card.classList.remove('show');
+    setTimeout(function(){drawCard()},350);
+  }
+});
+
+})();
+
+// ===== PWA: Service Worker 注册 =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+
+// ===== PWA: 安装提示 =====
+var deferredPrompt;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  deferredPrompt=e;
+  var banner=E('installBanner');
+  if(banner)banner.classList.add('show');
+});
+E('installBtn').addEventListener('click',function(){
+  var banner=E('installBanner');
+  if(banner)banner.classList.remove('show');
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r){
+      deferredPrompt=null;
+    });
+  }
+});
+E('installDismiss').addEventListener('click',function(){
+  var banner=E('installBanner');
+  if(banner)banner.classList.remove('show');
+});
+window.addEventListener('appinstalled',function(){
+  var banner=E('installBanner');
+  if(banner)banner.classList.remove('show');
+  deferredPrompt=null;
+});
+</script>
+</body>
+</html>

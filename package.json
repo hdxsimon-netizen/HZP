@@ -1,0 +1,18 @@
+{
+  "name": "mao-tarot",
+  "version": "1.0.0",
+  "description": "遇事不决 · 读毛选 — 毛泽东选集塔罗牌风格 App",
+  "private": true,
+  "scripts": {
+    "prepare": "node scripts/prepare-www.js",
+    "cap:init": "npx cap init '读毛选' 'com.mao.tarot' --web-dir=www",
+    "cap:add": "npx cap add android",
+    "cap:sync": "npx cap sync android",
+    "cap:build": "cd android && ./gradlew assembleRelease"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}
