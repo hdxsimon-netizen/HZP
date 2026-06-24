@@ -5,7 +5,7 @@ import json
 from PIL import Image
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCE = os.path.join(PROJECT_ROOT, 'back-yushi.png')
+SOURCE = os.path.join(PROJECT_ROOT, 'app-icon.png')
 ASSETS_DIR = os.path.join(PROJECT_ROOT, 'ios', 'App', 'App', 'Assets.xcassets', 'AppIcon.appiconset')
 
 # iOS icon sizes (idiom × scale × size in points → pixels)
