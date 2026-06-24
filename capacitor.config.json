@@ -4,6 +4,7 @@
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
+    "iosScheme": "capacitor",
     "androidScheme": "https"
   },
   "android": {
@@ -13,5 +14,12 @@
       "keystorePassword": "",
       "keystoreKeyPassword": ""
     }
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile",
+    "allowsLinkPreview": false,
+    "scrollEnabled": false,
+    "scheme": "capacitor"
   }
 }

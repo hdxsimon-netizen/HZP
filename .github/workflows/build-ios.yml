@@ -1,0 +1,54 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare www directory
+        run: node scripts/prepare-www.js
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Sync web assets to iOS
+        run: npx cap sync ios
+
+      - name: Build iOS .app (unsigned)
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -sdk iphoneos \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/App.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package .app for download
+        run: |
+          cd ios/App/build
+          zip -r ../../../ios-app-unsigned.zip App.xcarchive
+
+      - name: Upload iOS .app
+        uses: actions/upload-artifact@v4
+        with:
+          name: mao-tarot-ios-unsigned
+          path: ios-app-unsigned.zip
