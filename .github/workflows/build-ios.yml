@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate iOS app icons
         run: |
-          pip3 install Pillow
+          pip3 install --break-system-packages Pillow
           python3 scripts/generate-ios-icons.py
 
       - name: Sync web assets to iOS
