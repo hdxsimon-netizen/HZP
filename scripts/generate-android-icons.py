@@ -88,17 +88,16 @@ def main():
         f.write(ic_launcher_xml)
     print(f'  mipmap-anydpi-v26/ic_launcher.xml')
 
-    # Create the background color resource for adaptive icon
-    values_dir = os.path.join(ANDROID_BASE, 'values')
-    os.makedirs(values_dir, exist_ok=True)
-
-    colors_xml = '''<?xml version="1.0" encoding="utf-8"?>
+    # Overwrite Capacitor's default background color with our app color
+    bg_file = os.path.join(ANDROID_BASE, 'values', 'ic_launcher_background.xml')
+    if os.path.exists(bg_file):
+        bg_xml = '''<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#8B1A1A</color>
 </resources>'''
-    with open(os.path.join(values_dir, 'colors.xml'), 'w') as f:
-        f.write(colors_xml)
-    print(f'  values/colors.xml (background: #8B1A1A)')
+        with open(bg_file, 'w') as f:
+            f.write(bg_xml)
+        print(f'  values/ic_launcher_background.xml (updated to #8B1A1A)')
 
     print('\nAll Android icon sizes generated successfully!')
 
