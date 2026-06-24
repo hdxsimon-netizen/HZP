@@ -281,7 +281,7 @@ body::before{
   display:none;position:fixed;z-index:100;
   left:50%;top:50%;transform:translate(-50%,-50%);
   width:var(--card-w);
-  height:var(--card-h);
+  max-height:calc(100vh - 2rem);
   background:var(--card-bg);
   border:1.5px solid var(--card-border);border-radius:.9rem;
   box-shadow:var(--card-shadow),0 0 35px var(--accent-dim),inset 0 1px 0 rgba(255,200,0,.06);
