@@ -52,7 +52,7 @@
   --transition-speed:.4s;
   /* 统一卡牌尺寸 */
   --card-w:min(88vw,360px);
-  --card-h:min(110vw,480px);
+  --card-h:min(138vw,620px);
 }
 
 /* ===== 重置 ===== */
@@ -143,7 +143,7 @@ body::before{
   position:relative;cursor:pointer;
   width:var(--card-w);
   height:var(--card-h);
-  max-width:360px;max-height:480px;
+  max-width:360px;max-height:620px;
   z-index:10;
 }
 .deck-card{
@@ -328,7 +328,6 @@ body::before{
   padding:.55rem .7rem;background:var(--action-bg);
   border-radius:.5rem;border:1px solid var(--action-border);
   box-shadow:inset 0 1px 3px rgba(0,0,0,.15);
-  max-height:30vh;overflow-y:auto;
   transition:all .4s ease;
 }
 .btn-row{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:auto;padding-top:.5rem}
@@ -497,7 +496,7 @@ body::before{
   html{font-size:17px}
   :root{
     --card-w:min(75vw,360px);
-    --card-h:min(105vw,500px);
+    --card-h:min(132vw,620px);
   }
 }
 
@@ -506,7 +505,7 @@ body::before{
   html{font-size:18px}
   :root{
     --card-w:min(60vw,420px);
-    --card-h:min(95vw,520px);
+    --card-h:min(120vw,640px);
   }
   body::before{width:min(100vw,520px)}
   .deck-card .card-symbol{font-size:3rem}
